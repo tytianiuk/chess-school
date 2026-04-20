@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Assembly
+.next/
+dist/
+build/
+
+# Secrets and configurations
+.env
+.env.local
+.DS_Store
+
+# Prisma
+server/prisma/dev.db
+server/prisma/dev.db-journal
