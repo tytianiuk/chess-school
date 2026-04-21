@@ -1,8 +1,74 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  COACH
+  STUDENT
+}
+
+enum ProgressStatus {
+  PENDING
+  IN_PROGRESS
+  SOLVED
+  FAILED
+}
+
+model User {
+  id              Int      @id @default(autoincrement())
+  email           String   @unique
+  password        String
+  fullName        String
+  lichessUsername String?  // Нікнейм на Lichess для учнів
+  role            Role     @default(STUDENT)
+  createdAt       DateTime @default(now())
+
+  createdAssignments Assignment[]      @relation("CoachAssignments")
+  studentProgress    StudentProgress[]
+}
+
+model Assignment {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String? 
+  createdAt   DateTime @default(now())
+
+  coachId     Int
+  coach       User     @relation("CoachAssignments", fields: [coachId], references: [id])
+  
+  puzzles     Puzzle[] 
+
+  progress    StudentProgress[]
+}
+
+model Puzzle {
+  id             Int      @id @default(autoincrement())
+  title          String? 
+  fen            String   
+  solution       String   
+  hint           String?  
+  tags           String[] 
+  
+  createdAt      DateTime @default(now())
+
+  assignments    Assignment[] 
+}
+
+model StudentProgress {
+  id           Int            @id @default(autoincrement())
+  status       ProgressStatus @default(PENDING)
+  completedAt  DateTime?      
+  
+  studentId    Int
+  student      User           @relation(fields: [studentId], references: [id])
+
+  assignmentId Int
+  assignment   Assignment     @relation(fields: [assignmentId], references: [id])
+
+  @@unique([studentId, assignmentId]) 
 }
