@@ -1,9 +1,20 @@
-import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsArray,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
+import { PuzzleType } from '@prisma/client';
 
 export class CreatePuzzleDto {
   @IsString()
   @IsOptional()
   title?: string;
+
+  @IsEnum(PuzzleType)
+  @IsOptional()
+  type?: PuzzleType;
 
   @IsString()
   @IsNotEmpty({ message: 'FEN string is required' })

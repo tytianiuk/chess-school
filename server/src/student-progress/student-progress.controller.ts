@@ -26,23 +26,37 @@ export class StudentProgressController {
   assign(@Body() dto: CreateStudentProgressDto) {
     return this.progressService.assignToStudent(dto);
   }
-  @Get('my-assignments')
+
   @Roles(Role.STUDENT)
+  @Get('my-assignments')
   getMyAssignments(@Request() req) {
     return this.progressService.findByStudent(req.user.userId);
   }
 
-  @Patch(':id/status')
   @Roles(Role.STUDENT)
-  updateStatus(
+  @Patch(':id/move')
+  async makeMove(
     @Param('id') id: string,
-    @Body('status') status: ProgressStatus,
+    @Body() body: { puzzleId: number; move: string },
   ) {
-    return this.progressService.updateStatus(+id, status);
+    return this.progressService.handleMove(+id, body.puzzleId, body.move);
   }
 
-  @Delete(':id/unassign')
   @Roles(Role.COACH)
+  @Patch(':id/review')
+  async review(
+    @Param('id') id: string,
+    @Body() body: { status: ProgressStatus; comment?: string },
+  ) {
+    return this.progressService.reviewAssignment(
+      +id,
+      body.status,
+      body.comment,
+    );
+  }
+
+  @Roles(Role.COACH)
+  @Delete(':id/unassign')
   remove(@Param('id') id: string) {
     return this.progressService.unassign(+id);
   }

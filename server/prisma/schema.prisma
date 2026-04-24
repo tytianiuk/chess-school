@@ -12,9 +12,15 @@ enum Role {
   STUDENT
 }
 
+enum PuzzleType {
+  AUTO      
+  MANUAL
+}
+
 enum ProgressStatus {
   PENDING
   IN_PROGRESS
+  REVIEW_PENDING
   SOLVED
   FAILED
 }
@@ -49,14 +55,13 @@ model Assignment {
 model Puzzle {
   id             Int      @id @default(autoincrement())
   title          String? 
+  type           PuzzleType @default(AUTO)
   fen            String   
   solution       String   
   hint           String?  
   tags           String[] 
-  
+  assignments    Assignment[]   
   createdAt      DateTime @default(now())
-
-  assignments    Assignment[] 
 }
 
 model StudentProgress {
@@ -69,6 +74,11 @@ model StudentProgress {
 
   assignmentId Int
   assignment   Assignment     @relation(fields: [assignmentId], references: [id])
+
+  currentStep     Int            @default(0)
+  isFirstTryFail  Boolean        @default(false)
+  studentAnswer   String?        @db.Text
+  trainerComment  String?        @db.Text
 
   @@unique([studentId, assignmentId]) 
 }
