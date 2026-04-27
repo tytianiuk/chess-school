@@ -13,7 +13,7 @@ enum Role {
 }
 
 enum PuzzleType {
-  AUTO      
+  AUTO
   MANUAL
 }
 
@@ -30,7 +30,7 @@ model User {
   email           String   @unique
   password        String
   fullName        String
-  lichessUsername String?  // Нікнейм на Lichess для учнів
+  lichessUsername String? // Нікнейм на Lichess для учнів
   role            Role     @default(STUDENT)
   createdAt       DateTime @default(now())
 
@@ -41,44 +41,60 @@ model User {
 model Assignment {
   id          Int      @id @default(autoincrement())
   title       String
-  description String? 
+  description String?
   createdAt   DateTime @default(now())
 
-  coachId     Int
-  coach       User     @relation("CoachAssignments", fields: [coachId], references: [id])
-  
-  puzzles     Puzzle[] 
+  coachId Int
+  coach   User @relation("CoachAssignments", fields: [coachId], references: [id])
 
-  progress    StudentProgress[]
+  puzzles Puzzle[]
+
+  progress StudentProgress[]
 }
 
 model Puzzle {
-  id             Int      @id @default(autoincrement())
-  title          String? 
-  type           PuzzleType @default(AUTO)
-  fen            String   
-  solution       String   
-  hint           String?  
-  tags           String[] 
-  assignments    Assignment[]   
-  createdAt      DateTime @default(now())
+  id          Int          @id @default(autoincrement())
+  title       String?
+  type        PuzzleType   @default(AUTO)
+  fen         String
+  solution    String
+  hint        String?
+  tags        String[]
+  assignments Assignment[]
+  createdAt   DateTime     @default(now())
+
+  puzzleStatuses StudentPuzzleStatus[]
 }
 
 model StudentProgress {
-  id           Int            @id @default(autoincrement())
-  status       ProgressStatus @default(PENDING)
-  completedAt  DateTime?      
-  
-  studentId    Int
-  student      User           @relation(fields: [studentId], references: [id])
+  id             Int            @id @default(autoincrement())
+  studentId      Int
+  assignmentId   Int
+  status         ProgressStatus @default(PENDING)
+  trainerComment String?        @db.Text
+  completedAt    DateTime?
 
-  assignmentId Int
-  assignment   Assignment     @relation(fields: [assignmentId], references: [id])
+  puzzleStatuses StudentPuzzleStatus[]
 
-  currentStep     Int            @default(0)
-  isFirstTryFail  Boolean        @default(false)
-  studentAnswer   String?        @db.Text
-  trainerComment  String?        @db.Text
+  student    User       @relation(fields: [studentId], references: [id])
+  assignment Assignment @relation(fields: [assignmentId], references: [id])
 
-  @@unique([studentId, assignmentId]) 
+  @@unique([studentId, assignmentId])
+}
+
+model StudentPuzzleStatus {
+  id         Int @id @default(autoincrement())
+  progressId Int
+  puzzleId   Int
+
+  currentStep    Int     @default(0)
+  isFirstTryFail Boolean @default(false)
+  failStep       Int?
+  isSolved       Boolean @default(false)
+  studentAnswer  String? @db.Text
+
+  progress StudentProgress @relation(fields: [progressId], references: [id])
+  puzzle   Puzzle          @relation(fields: [puzzleId], references: [id])
+
+  @@unique([progressId, puzzleId])
 }
