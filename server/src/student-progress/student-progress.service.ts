@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateStudentProgressDto } from './dto/create-student-progress.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { ProgressStatus, PuzzleType } from '@prisma/client';
+import { Chess } from 'chess.js';
 
 @Injectable()
 export class StudentProgressService {
@@ -107,19 +108,31 @@ export class StudentProgressService {
     puzzleStatus: any,
     playerMove: string,
   ) {
-    const moves = puzzleStatus.puzzle.solution.split(' ');
-    const expectedMove = moves[puzzleStatus.currentStep];
+    const { puzzle, currentStep, id: statusId, isFirstTryFail } = puzzleStatus;
 
-    if (playerMove !== expectedMove) {
-      await this.markAsFailed(
-        puzzleStatus.id,
-        puzzleStatus.currentStep,
-        puzzleStatus.isFirstTryFail,
-      );
-      return { correct: false, message: 'Incorrect.' };
+    const validation = this.validateChessMove(
+      puzzle.fen,
+      puzzle.solution,
+      currentStep,
+      playerMove,
+    );
+
+    if (!validation.isValid) {
+      return { correct: false, message: validation.error };
     }
 
-    let nextStep = puzzleStatus.currentStep + 1;
+    const moves = puzzle.solution.split(' ');
+    const expectedMove = moves[currentStep];
+
+    if (playerMove !== expectedMove) {
+      await this.markAsFailed(statusId, currentStep, isFirstTryFail);
+      return {
+        correct: false,
+        message: 'Incorrect.',
+      };
+    }
+
+    let nextStep = currentStep + 1;
     let serverMove = null;
 
     if (nextStep < moves.length) {
@@ -130,7 +143,7 @@ export class StudentProgressService {
     const isFinished = nextStep >= moves.length;
 
     await this.prisma.studentPuzzleStatus.update({
-      where: { id: puzzleStatus.id },
+      where: { id: statusId },
       data: { currentStep: nextStep, isSolved: isFinished },
     });
 
@@ -180,6 +193,43 @@ export class StudentProgressService {
         data: { status: ProgressStatus.IN_PROGRESS },
       });
       mainProgress.status = ProgressStatus.IN_PROGRESS;
+    }
+  }
+
+  private validateChessMove(
+    fen: string,
+    solution: string,
+    currentStep: number,
+    playerMove: string,
+  ) {
+    try {
+      const game = new Chess(fen);
+      const moves = solution.split(' ');
+
+      for (let i = 0; i < currentStep; i++) {
+        const moveResult = game.move(moves[i]);
+        if (!moveResult) {
+          throw new Error(
+            `The internal error: incorrect move in the solution (${moves[i]})`,
+          );
+        }
+      }
+
+      const moveAttempt = game.move(playerMove);
+
+      if (!moveAttempt) {
+        return {
+          isValid: false,
+          error: 'This move is not possible according to the rules of chess!',
+        };
+      }
+
+      return { isValid: true, moveDetails: moveAttempt };
+    } catch (e) {
+      return {
+        isValid: false,
+        error: 'The internal error: incorrect move format or validation error.',
+      };
     }
   }
 }
