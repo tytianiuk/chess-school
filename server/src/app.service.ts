@@ -2,7 +2,12 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class AppService {
-  getHello(): string {
-    return 'Hello World!';
+  getSystemStatus() {
+    return {
+      name: 'Chess School API',
+      status: 'OK',
+      timestamp: new Date().toISOString(),
+      documentation: '/api',
+    };
   }
 }

@@ -15,38 +15,61 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { Role } from '@prisma/client/wasm';
+import {
+  ApiBearerAuth,
+  ApiResponse,
+  ApiOperation,
+  ApiParam,
+} from '@nestjs/swagger';
 
+@ApiBearerAuth()
 @Controller('puzzles')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class PuzzlesController {
   constructor(private readonly puzzlesService: PuzzlesService) {}
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.COACH)
   @Post()
-  create(@Body() createPuzzleDto: CreatePuzzleDto) {
-    return this.puzzlesService.create(createPuzzleDto);
+  @Roles(Role.COACH)
+  @ApiOperation({ summary: 'Create a new puzzle' })
+  @ApiResponse({ status: 201, description: 'Puzzle created successfully' })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  create(@Body() dto: CreatePuzzleDto) {
+    return this.puzzlesService.create(dto);
   }
 
   @Get()
+  @ApiOperation({ summary: 'Find all puzzles' })
+  @ApiResponse({ status: 200, description: 'Puzzles retrieved successfully' })
   findAll() {
     return this.puzzlesService.findAll();
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Find a puzzle by ID' })
+  @ApiParam({ name: 'id', description: 'Unique identifier of the puzzle' })
+  @ApiResponse({ status: 200, description: 'Puzzle found' })
+  @ApiResponse({ status: 404, description: 'Puzzle not found' })
   findOne(@Param('id') id: string) {
     return this.puzzlesService.findOne(+id);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.COACH)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePuzzleDto: UpdatePuzzleDto) {
-    return this.puzzlesService.update(+id, updatePuzzleDto);
+  @Roles(Role.COACH)
+  @ApiOperation({ summary: 'Update a puzzle (coach only)' })
+  @ApiParam({ name: 'id', description: 'ID of the puzzle to update' })
+  @ApiResponse({ status: 200, description: 'Puzzle updated successfully' })
+  @ApiResponse({ status: 404, description: 'Puzzle not found' })
+  update(@Param('id') id: string, @Body() dto: UpdatePuzzleDto) {
+    return this.puzzlesService.update(+id, dto);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.COACH)
   @Delete(':id')
+  @Roles(Role.COACH)
+  @ApiOperation({ summary: 'Delete a puzzle (coach only)' })
+  @ApiParam({ name: 'id', description: 'ID of the puzzle to delete' })
+  @ApiResponse({ status: 200, description: 'Puzzle deleted successfully' })
+  @ApiResponse({ status: 404, description: 'Puzzle not found' })
   remove(@Param('id') id: string) {
     return this.puzzlesService.remove(+id);
   }
