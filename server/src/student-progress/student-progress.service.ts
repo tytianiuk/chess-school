@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { CreateStudentProgressDto } from './dto/create-student-progress.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { ProgressStatus, PuzzleType } from '@prisma/client';
@@ -8,7 +8,16 @@ import { Chess } from 'chess.js';
 export class StudentProgressService {
   constructor(private prisma: PrismaService) {}
 
-  async assignToStudent(dto: CreateStudentProgressDto) {
+  async assignToStudent(dto: CreateStudentProgressDto, coachId: number) {
+    const student = await this.prisma.user.findUnique({
+      where: { id: dto.studentId },
+    });
+
+    if (!student || student.coachId !== coachId) {
+      throw new ForbiddenException(
+        'You can only assign puzzles to your own students',
+      );
+    }
     return this.prisma.studentProgress.create({
       data: {
         studentId: dto.studentId,

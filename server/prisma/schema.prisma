@@ -36,6 +36,10 @@ model User {
 
   createdAssignments Assignment[]      @relation("CoachAssignments")
   studentProgress    StudentProgress[]
+  
+  students  User[]   @relation("CoachToStudent")
+  coachId   Int?
+  coach     User?    @relation("CoachToStudent", fields: [coachId], references: [id])
 }
 
 model Assignment {

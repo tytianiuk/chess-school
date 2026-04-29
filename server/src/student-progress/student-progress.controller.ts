@@ -35,8 +35,8 @@ export class StudentProgressController {
   @Post('assign')
   @ApiOperation({ summary: 'Assign task to student (coach only)' })
   @ApiResponse({ status: 201, description: 'Task assigned successfully' })
-  assign(@Body() dto: CreateStudentProgressDto) {
-    return this.progressService.assignToStudent(dto);
+  assign(@Body() dto: CreateStudentProgressDto, @Request() req) {
+    return this.progressService.assignToStudent(dto, req.user.userId);
   }
 
   @Roles(Role.STUDENT)
