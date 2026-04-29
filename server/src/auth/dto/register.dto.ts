@@ -28,8 +28,4 @@ export class RegisterDto {
   @IsString()
   @ApiProperty({ example: 'john_doe' })
   lichessUsername?: string;
-
-  @IsEnum(Role, { message: 'Role must be either COACH or STUDENT' })
-  @ApiProperty({ example: Role.STUDENT })
-  role!: Role;
 }

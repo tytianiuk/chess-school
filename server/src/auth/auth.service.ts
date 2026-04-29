@@ -5,6 +5,7 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt/dist/jwt.service';
 import { LoginDto } from './dto/login.dto';
 import { access } from 'fs';
+import { Role } from '@prisma/client/index-browser';
 
 @Injectable()
 export class AuthService {
@@ -30,13 +31,12 @@ export class AuthService {
         email: dto.email,
         password: hashedPassword,
         fullName: dto.fullName,
-        role: dto.role,
+        role: Role.STUDENT,
         lichessUsername: dto.lichessUsername,
       },
     });
 
     const { password, ...userWithoutPassword } = newUser;
-
     return userWithoutPassword;
   }
 
