@@ -81,7 +81,7 @@ model StudentProgress {
   puzzleStatuses StudentPuzzleStatus[]
 
   student    User       @relation(fields: [studentId], references: [id])
-  assignment Assignment @relation(fields: [assignmentId], references: [id])
+  assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, assignmentId])
 }
@@ -97,7 +97,7 @@ model StudentPuzzleStatus {
   isSolved       Boolean @default(false)
   studentAnswer  String? @db.Text
 
-  progress StudentProgress @relation(fields: [progressId], references: [id])
+  progress StudentProgress @relation(fields: [progressId], references: [id], onDelete: Cascade)
   puzzle   Puzzle          @relation(fields: [puzzleId], references: [id])
 
   @@unique([progressId, puzzleId])
