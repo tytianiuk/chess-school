@@ -1,12 +1,5 @@
-import {
-  IsArray,
-  IsEnum,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-} from 'class-validator';
-import { PuzzleType } from '@prisma/client';
-import { ApiProperty } from '@nestjs/swagger/dist/decorators/api-property.decorator';
+import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CreatePuzzleDto {
   @IsString()
@@ -17,17 +10,6 @@ export class CreatePuzzleDto {
     required: false,
   })
   title?: string;
-
-  @IsEnum(PuzzleType)
-  @IsOptional()
-  @ApiProperty({
-    enum: PuzzleType,
-    example: PuzzleType.AUTO,
-    default: PuzzleType.AUTO,
-    description: 'Puzzle type: AUTO (automatic) or MANUAL (text)',
-    required: false,
-  })
-  type?: PuzzleType;
 
   @IsString()
   @IsNotEmpty({ message: 'FEN string is required' })

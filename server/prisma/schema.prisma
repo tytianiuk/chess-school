@@ -12,7 +12,7 @@ enum Role {
   STUDENT
 }
 
-enum PuzzleType {
+enum CheckType {
   AUTO
   MANUAL
 }
@@ -30,75 +30,121 @@ model User {
   email           String   @unique
   password        String
   fullName        String
-  lichessUsername String? // Нікнейм на Lichess для учнів
+  lichessUsername String?
   role            Role     @default(STUDENT)
   createdAt       DateTime @default(now())
 
-  createdAssignments Assignment[]      @relation("CoachAssignments")
-  studentProgress    StudentProgress[]
-  
-  students  User[]   @relation("CoachToStudent")
-  coachId   Int?
-  coach     User?    @relation("CoachToStudent", fields: [coachId], references: [id])
+  // Тренер
+  createdHomeworks Homework[] @relation("CoachHomeworks")
+  createdGroups    Group[]    @relation("CoachGroups")
+
+  // Учень
+  groupMemberships    GroupMember[]
+  homeworkAnswers     HomeworkAnswer[]
+  individualHomeworks Homework[] @relation("StudentHomeworks")
+
+  // Зв'язок тренер-учень
+  students User[]  @relation("CoachToStudent")
+  coachId  Int?
+  coach    User?   @relation("CoachToStudent", fields: [coachId], references: [id])
 }
 
-model Assignment {
+model Group {
+  id        Int      @id @default(autoincrement())
+  name      String
+  coachId   Int
+  createdAt DateTime @default(now())
+
+  coach     User          @relation("CoachGroups", fields: [coachId], references: [id])
+  members   GroupMember[]
+  homeworks Homework[]
+}
+
+model GroupMember {
+  id        Int @id @default(autoincrement())
+  groupId   Int
+  studentId Int
+
+  group   Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  student User  @relation(fields: [studentId], references: [id])
+
+  @@unique([groupId, studentId])
+}
+
+model Puzzle {
+  id        Int      @id @default(autoincrement())
+  title     String?
+  fen       String
+  solution  String
+  hint      String?
+  tags      String[]
+  createdAt DateTime @default(now())
+
+  homeworkPuzzles HomeworkPuzzle[]
+}
+
+model Homework {
   id          Int      @id @default(autoincrement())
   title       String
   description String?
   createdAt   DateTime @default(now())
 
   coachId Int
-  coach   User @relation("CoachAssignments", fields: [coachId], references: [id])
+  coach   User @relation("CoachHomeworks", fields: [coachId], references: [id])
 
-  puzzles Puzzle[]
+  // Групове або індивідуальне
+  groupId   Int?
+  group     Group? @relation(fields: [groupId], references: [id])
+  studentId Int?
+  student   User?  @relation("StudentHomeworks", fields: [studentId], references: [id])
 
-  progress StudentProgress[]
+  puzzles         HomeworkPuzzle[]
+  homeworkAnswers HomeworkAnswer[]
 }
 
-model Puzzle {
-  id          Int          @id @default(autoincrement())
-  title       String?
-  type        PuzzleType   @default(AUTO)
-  fen         String
-  solution    String
-  hint        String?
-  tags        String[]
-  assignments Assignment[]
-  createdAt   DateTime     @default(now())
+model HomeworkPuzzle {
+  id         Int       @id @default(autoincrement())
+  homeworkId Int
+  puzzleId   Int
+  checkType  CheckType @default(AUTO)
 
-  puzzleStatuses StudentPuzzleStatus[]
+  homework       Homework       @relation(fields: [homeworkId], references: [id], onDelete: Cascade)
+  puzzle         Puzzle         @relation(fields: [puzzleId], references: [id])
+  puzzleAttempts PuzzleAttempt[]
+
+  @@unique([homeworkId, puzzleId])
 }
 
-model StudentProgress {
-  id             Int            @id @default(autoincrement())
-  studentId      Int
-  assignmentId   Int
-  status         ProgressStatus @default(PENDING)
-  trainerComment String?        @db.Text
+model HomeworkAnswer {
+  id         Int            @id @default(autoincrement())
+  studentId  Int
+  homeworkId Int
+  status     ProgressStatus @default(PENDING)
+  trainerComment String?    @db.Text
+  score          Int?
   completedAt    DateTime?
 
-  puzzleStatuses StudentPuzzleStatus[]
+  student  User     @relation(fields: [studentId], references: [id])
+  homework Homework @relation(fields: [homeworkId], references: [id], onDelete: Cascade)
 
-  student    User       @relation(fields: [studentId], references: [id])
-  assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  puzzleAttempts PuzzleAttempt[]
 
-  @@unique([studentId, assignmentId])
+  @@unique([studentId, homeworkId])
 }
 
-model StudentPuzzleStatus {
-  id         Int @id @default(autoincrement())
-  progressId Int
-  puzzleId   Int
+model PuzzleAttempt {
+  id               Int @id @default(autoincrement())
+  homeworkAnswerId Int
+  homeworkPuzzleId Int
 
-  currentStep    Int     @default(0)
-  isFirstTryFail Boolean @default(false)
-  failStep       Int?
-  isSolved       Boolean @default(false)
-  studentAnswer  String? @db.Text
+  currentStep   Int     @default(0)
+  attemptCount  Int     @default(0)
+  solvedOnFirst Boolean @default(false)
+  isSolved      Boolean @default(false)
+  studentAnswer String? @db.Text
 
-  progress StudentProgress @relation(fields: [progressId], references: [id], onDelete: Cascade)
-  puzzle   Puzzle          @relation(fields: [puzzleId], references: [id])
+  homeworkAnswer HomeworkAnswer @relation(fields: [homeworkAnswerId], references: [id], onDelete: Cascade)
+  homeworkPuzzle HomeworkPuzzle @relation(fields: [homeworkPuzzleId], references: [id])
 
-  @@unique([progressId, puzzleId])
+  @@unique([homeworkAnswerId, homeworkPuzzleId])
 }

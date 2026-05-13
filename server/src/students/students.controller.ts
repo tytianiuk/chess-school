@@ -17,12 +17,19 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-
+@ApiTags('Students')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('users')
 export class StudentsController {
   constructor(private readonly studentsService: StudentsService) {}
+
+  @Get()
+  @Roles(Role.COACH)
+  @ApiOperation({ summary: 'A list of all students' })
+  getAll() {
+    return this.studentsService.findAllStudents();
+  }
 
   @Get('unassigned')
   @Roles(Role.COACH)

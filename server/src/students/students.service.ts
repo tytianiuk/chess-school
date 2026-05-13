@@ -10,6 +10,15 @@ import { PrismaService } from '../prisma/prisma.service';
 export class StudentsService {
   constructor(private prisma: PrismaService) {}
 
+  async findAllStudents() {
+    return this.prisma.user.findMany({
+      where: {
+        role: 'STUDENT',
+      },
+      select: { id: true, email: true, fullName: true },
+    });
+  }
+
   async findUnassignedStudents() {
     return this.prisma.user.findMany({
       where: {
