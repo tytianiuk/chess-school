@@ -1,102 +1,218 @@
 'use client';
 
 import { useState } from 'react';
-import api from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
+import { useAuth } from '@/context/AuthContext';
+import type { Role } from '@/lib/types';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Loader2 } from 'lucide-react';
 
 export default function RegisterPage() {
+  const router = useRouter();
+  const { register, user } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
+    confirmPassword: '',
     fullName: '',
     lichessUsername: '',
+    role: 'STUDENT' as Role,
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  if (user) {
+    router.push(user.role === 'COACH' ? '/coach' : '/student');
+    return null;
+  }
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setError('');
 
+    if (formData.password !== formData.confirmPassword) {
+      setError('Паролі не співпадають');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError('Пароль має бути не менше 6 символів');
+      return;
+    }
+
+    setIsLoading(true);
+
     try {
-      await api.post('/auth/register', formData);
-      router.push('/login');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Error. Try again later.');
+      await register({
+        email: formData.email,
+        password: formData.password,
+        fullName: formData.fullName,
+        role: formData.role,
+        lichessUsername: formData.lichessUsername || undefined,
+      });
+    } catch {
+      setError('Помилка реєстрації. Можливо, цей email вже зареєстрований.');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md space-y-8 rounded-2xl bg-white p-8 shadow-xl">
-        <div className="text-center">
-          <h2 className="text-center text-3xl font-bold tracking-tight text-gray-900">
-            Створити акаунт
-          </h2>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleRegister}>
-          <div className="space-y-4 rounded-md shadow-sm">
-            <input
-              name="fullName"
-              type="text"
-              required
-              className="relative block w-full rounded-t-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 px-3"
-              placeholder="Пилипенко Остап"
-              onChange={handleChange}
-            />
-            <input
-              name="email"
-              type="email"
-              required
-              className="relative block w-full border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 px-3"
-              placeholder="chess@example.com"
-              onChange={handleChange}
-            />
-            <input
-              name="password"
-              type="password"
-              required
-              className="relative block w-full border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 px-3"
-              placeholder="••••••••"
-              onChange={handleChange}
-            />
-            <input
-              name="lichessUsername"
-              type="text"
-              className="relative block w-full rounded-b-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 px-3"
-              placeholder="Lichess Username (опціонально)"
-              onChange={handleChange}
-            />
-          </div>
+    <div className="min-h-screen flex bg-background">
+      <div className="hidden lg:flex lg:w-1/2 relative">
+        <Image
+          src="/images/register-image.jpg"
+          alt="Chess pieces on a board"
+          fill
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-black/20" />
+      </div>
 
-          {error && <p className="text-sm text-red-500 text-center">{error}</p>}
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="group relative flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-colors"
-          >
-            {isLoading ? 'Реєстрація...' : 'Зареєструватися'}
-          </button>
-        </form>
+      <div className="flex-1 flex items-center justify-center p-8 overflow-y-auto">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <img
+              className="mx-auto my-4 items-center justify-center h-16 w-16"
+              src="favicon.ico"
+              alt="logo"
+            />
+            <CardTitle className="text-2xl">Chess School</CardTitle>
+            <CardDescription>Зареєструватися зараз </CardDescription>
+          </CardHeader>
+          <form onSubmit={handleSubmit}>
+            <CardContent className="space-y-4">
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Повне ім&apos;я</Label>
+                <Input
+                  id="fullName"
+                  type="text"
+                  placeholder="Іван Петренко"
+                  value={formData.fullName}
+                  onChange={(e) =>
+                    setFormData({ ...formData, fullName: e.target.value })
+                  }
+                  required
+                  disabled={isLoading}
+                  className="h-11"
+                />
+              </div>
 
-        <div className="text-center text-sm">
-          <span className="text-gray-600">Вже маєте акаунт? </span>
-          <Link
-            href="/login"
-            className="font-medium text-indigo-600 hover:text-indigo-500"
-          >
-            Увійти
-          </Link>
-        </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="your@email.com"
+                  value={formData.email}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
+                  required
+                  disabled={isLoading}
+                  className="h-11"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="lichessUsername">
+                  Lichess Username (необов&apos;язково)
+                </Label>
+                <Input
+                  id="lichessUsername"
+                  type="text"
+                  placeholder="your_lichess_username"
+                  value={formData.lichessUsername}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      lichessUsername: e.target.value,
+                    })
+                  }
+                  disabled={isLoading}
+                  className="h-11"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="password">Пароль</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="********"
+                    value={formData.password}
+                    onChange={(e) =>
+                      setFormData({ ...formData, password: e.target.value })
+                    }
+                    required
+                    disabled={isLoading}
+                    className="h-11"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Підтвердіть</Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    placeholder="********"
+                    value={formData.confirmPassword}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        confirmPassword: e.target.value,
+                      })
+                    }
+                    required
+                    disabled={isLoading}
+                    className="h-11"
+                  />
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter className="flex flex-col gap-4 mt-4">
+              <Button
+                type="submit"
+                className="w-full py-6 text-lg"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Реєстрація...
+                  </>
+                ) : (
+                  'Зареєструватися'
+                )}
+              </Button>
+              <p className="text-sm text-muted-foreground">
+                Вже маєте акаунт?{' '}
+                <Link href="/login" className="text-primary hover:underline">
+                  Увійти
+                </Link>
+              </p>
+            </CardFooter>
+          </form>
+        </Card>
       </div>
     </div>
   );

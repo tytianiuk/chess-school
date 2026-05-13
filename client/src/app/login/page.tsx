@@ -85,6 +85,7 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   disabled={isLoading}
+                  className="h-11"
                 />
               </div>
               <div className="space-y-2">
@@ -97,6 +98,7 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   disabled={isLoading}
+                  className="h-11"
                 />
               </div>
             </CardContent>
