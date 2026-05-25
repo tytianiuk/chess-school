@@ -4,13 +4,62 @@ services:
     container_name: chess_db
     restart: always
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: chess_school
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.dev
+    container_name: chess_server
+    restart: always
+    ports:
+      - '${SERVER_PORT}:${SERVER_PORT}'
+    environment:
+      DATABASE_URL: 'postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}?schema=public'
+      JWT_SECRET: ${JWT_SECRET}
+      FRONTEND_URL: 'http://localhost:${CLIENT_PORT}'
+    volumes:
+      - ./server:/usr/src/app
+      - /usr/src/app/node_modules
+    depends_on:
+      - postgres
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile.dev
+    container_name: chess_client
+    restart: always
+    ports:
+      - '${CLIENT_PORT}:${CLIENT_PORT}'
+    environment:
+      NEXT_PUBLIC_API_URL: 'http://localhost:${SERVER_PORT}'
+    volumes:
+      - ./client:/usr/src/app
+      - /usr/src/app/node_modules
+      - /usr/src/app/.next
+    depends_on:
+      - server
+
+  studio:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.dev
+    container_name: prisma_studio
+    restart: always
+    command: npx prisma studio --browser none --hostname 0.0.0.0 --port 5555
+    ports:
+      - '${STUDIO_PORT}:5555'
+    environment:
+      DATABASE_URL: 'postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}?schema=public'
+    depends_on:
+      - postgres
 
 volumes:
   postgres_data:
