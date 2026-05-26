@@ -1,5 +1,5 @@
 import api from '@/lib/api';
-import { PaginatedMeta, PaginatedResponse, Puzzle } from '@/lib/types';
+import { PaginatedResponse, Puzzle } from '@/lib/types';
 
 export const PuzzleService = {
   async getAll() {
