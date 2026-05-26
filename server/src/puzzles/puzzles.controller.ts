@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { PuzzlesService } from './puzzles.service';
 import { CreatePuzzleDto } from './dto/create-puzzle.dto';
@@ -22,6 +23,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { GetPuzzlesDto } from './dto/get-puzzles.dto';
 
 @ApiTags('Puzzles')
 @ApiBearerAuth()
@@ -44,8 +46,8 @@ export class PuzzlesController {
   @Roles(Role.COACH)
   @ApiOperation({ summary: 'Get all puzzles from the bank (coach only)' })
   @ApiResponse({ status: 200, description: 'Puzzles retrieved successfully' })
-  findAll() {
-    return this.puzzlesService.findAll();
+  findAll(@Query() query: GetPuzzlesDto) {
+    return this.puzzlesService.findAll(query);
   }
 
   @Get(':id')

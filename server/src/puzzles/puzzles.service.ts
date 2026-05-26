@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePuzzleDto } from './dto/create-puzzle.dto';
 import { UpdatePuzzleDto } from './dto/update-puzzle.dto';
 import { PrismaService } from '../prisma/prisma.service';
+import { GetPuzzlesDto } from './dto/get-puzzles.dto';
 
 @Injectable()
 export class PuzzlesService {
@@ -13,10 +14,30 @@ export class PuzzlesService {
     });
   }
 
-  async findAll() {
-    return this.prisma.puzzle.findMany({
-      orderBy: { createdAt: 'desc' },
-    });
+  async findAll(dto: GetPuzzlesDto) {
+    const page = dto.page!;
+    const limit = dto.limit!;
+
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await Promise.all([
+      this.prisma.puzzle.findMany({
+        skip: skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.puzzle.count(),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findOne(id: number) {
