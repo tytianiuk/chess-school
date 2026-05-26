@@ -87,7 +87,7 @@ export default function RegisterPage() {
           <CardHeader className="text-center">
             <img
               className="mx-auto my-4 items-center justify-center h-16 w-16"
-              src="favicon.ico"
+              src="/favicon.ico"
               alt="logo"
             />
             <CardTitle className="text-2xl">Chess School</CardTitle>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -27,10 +27,12 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  if (user) {
-    router.push(user.role === 'COACH' ? '/coach' : '/student');
-    return null;
-  }
+  useEffect(() => {
+    if (user) {
+      const redirectUrl = user.role === 'COACH' ? '/coach' : '/student';
+      router.push(redirectUrl);
+    }
+  }, [user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,7 +64,7 @@ export default function LoginPage() {
           <CardHeader className="text-center">
             <img
               className="mx-auto my-4 items-center justify-center h-16 w-16"
-              src="favicon.ico"
+              src="/favicon.ico"
               alt="logo"
             />
             <CardTitle className="text-2xl">Chess School</CardTitle>

@@ -31,7 +31,7 @@ export default function HomePage() {
       <header className="border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <img className="h-8 w-8" src="favicon.ico" alt="logo" />
+            <img className="h-8 w-8" src="/favicon.ico" alt="logo" />
             <span className="font-semibold text-lg">Chess School</span>
           </div>
           <div className="flex items-center gap-3">

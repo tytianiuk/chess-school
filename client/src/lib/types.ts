@@ -74,9 +74,6 @@ export interface Homework {
   group?: Group;
   student?: User;
   coach?: User;
-  _count?: {
-    puzzles: number;
-  };
 }
 
 export interface HomeworkPuzzle {

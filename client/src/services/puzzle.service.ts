@@ -1,14 +1,16 @@
 import api from '@/lib/api';
-import { PaginatedResponse, Puzzle } from '@/lib/types';
+import { PaginatedMeta, PaginatedResponse, Puzzle } from '@/lib/types';
 
 export const PuzzleService = {
   async getAll() {
-    const { data } = await api.get<{ data: Puzzle[] }>('/puzzles');
-    return data;
+    const { data } = await api.get('/puzzles');
+    return data as PaginatedResponse<Puzzle>;
   },
 
   async getPaginated(page: number = 1, limit: number = 8) {
-    const { data } = await api.get('/puzzles', {
+    const { data } = await api.get<{
+      data: Puzzle[];
+    }>('/puzzles', {
       params: { page, limit },
     });
     return data as PaginatedResponse<Puzzle>;
