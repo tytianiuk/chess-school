@@ -64,6 +64,71 @@ export class HomeworkAnswersService {
     });
   }
 
+  async findByHomework(homeworkId: number) {
+    const homework = await this.prisma.homework.findUnique({
+      where: { id: homeworkId },
+    });
+
+    if (!homework) {
+      throw new NotFoundException(`Homework with id ${homeworkId} not found`);
+    }
+
+    return this.prisma.homeworkAnswer.findMany({
+      where: { homeworkId },
+      include: {
+        student: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+          },
+        },
+        puzzleAttempts: true,
+      },
+      orderBy: {
+        status: 'asc',
+      },
+    });
+  }
+
+  async findByHomeworkAndStudent(homeworkId: number, studentId: number) {
+    const answer = await this.prisma.homeworkAnswer.findFirst({
+      where: {
+        homeworkId,
+        studentId,
+      },
+      include: {
+        student: {
+          select: { id: true, fullName: true, email: true },
+        },
+        homework: {
+          include: {
+            puzzles: {
+              include: { puzzle: true },
+            },
+          },
+        },
+        puzzleAttempts: {
+          include: {
+            homeworkPuzzle: {
+              include: {
+                puzzle: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!answer) {
+      throw new NotFoundException(
+        `Homework answer for homework ${homeworkId} and student ${studentId} not found`,
+      );
+    }
+
+    return answer;
+  }
+
   async handleMove(
     answerId: number,
     homeworkPuzzleId: number,

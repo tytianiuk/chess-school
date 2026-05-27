@@ -8,6 +8,7 @@ import {
   Delete,
   Request,
   UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { HomeworkAnswersService } from './homework-answers.service';
 import { CreateHomeworkAnswerDto } from './dto/create-homework-answer.dto';
@@ -43,6 +44,45 @@ export class HomeworkAnswersController {
   @ApiResponse({ status: 404, description: 'Homework not found' })
   assign(@Body() dto: CreateHomeworkAnswerDto, @Request() req) {
     return this.homeworkAnswersService.assignToStudent(dto, req.user.userId);
+  }
+
+  @Get('homework/:homeworkId')
+  @Roles(Role.COACH)
+  @ApiOperation({
+    summary: 'Get all student answers for a specific homework (coach only)',
+  })
+  @ApiParam({ name: 'homeworkId', description: 'ID of the homework' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of answers retrieved successfully',
+  })
+  async getAnswersForHomework(
+    @Param('homeworkId', ParseIntPipe) homeworkId: number,
+  ) {
+    return this.homeworkAnswersService.findByHomework(homeworkId);
+  }
+
+  @Get('homework/:homeworkId/student/:studentId')
+  @Roles(Role.COACH)
+  @ApiOperation({
+    summary:
+      'Get a specific student answer for a specific homework (coach only)',
+  })
+  @ApiParam({ name: 'homeworkId', description: 'ID of the homework' })
+  @ApiParam({ name: 'studentId', description: 'ID of the student' })
+  @ApiResponse({
+    status: 200,
+    description: 'Student homework answer retrieved successfully',
+  })
+  @ApiResponse({ status: 404, description: 'Answer not found' })
+  async getStudentAnswer(
+    @Param('homeworkId', ParseIntPipe) homeworkId: number,
+    @Param('studentId', ParseIntPipe) studentId: number,
+  ) {
+    return this.homeworkAnswersService.findByHomeworkAndStudent(
+      homeworkId,
+      studentId,
+    );
   }
 
   @Get('my-homeworks')

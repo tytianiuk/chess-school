@@ -84,7 +84,6 @@ export interface HomeworkPuzzle {
   puzzle?: Puzzle;
 }
 
-// Homework Answer types
 export interface HomeworkAnswer {
   id: number;
   studentId: number;
