@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateGroupDto } from './dto/create-group.dto';
+import { UpdateGroupDto } from './dto/update-group.dto';
 
 @Injectable()
 export class GroupsService {
@@ -43,6 +44,15 @@ export class GroupsService {
             },
           },
         },
+      },
+    });
+  }
+
+  async update(id: number, dto: UpdateGroupDto) {
+    return this.prisma.group.update({
+      where: { id },
+      data: {
+        name: dto.name,
       },
     });
   }

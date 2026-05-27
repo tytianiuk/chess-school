@@ -15,18 +15,9 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { Plus, Search, Pencil, Trash2, Users, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 
 export default function GroupsPage() {
   const {
@@ -62,7 +53,7 @@ export default function GroupsPage() {
         <Link href="/coach/groups/new">
           <Button className="py-6 px-6 text-lg">
             <Plus className="!h-6 !w-6" />
-            Створити задачу
+            Створити групу
           </Button>
         </Link>
       </div>
@@ -104,11 +95,6 @@ export default function GroupsPage() {
                     </CardDescription>
                   </div>
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Link href={`/coach/groups/${group.id}/edit`}>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                    </Link>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -155,25 +141,15 @@ export default function GroupsPage() {
         </Card>
       )}
 
-      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Видалити групу?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Цю дію неможливо скасувати. Групу буде видалено назавжди.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Скасувати</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive hover:bg-destructive/90"
-            >
-              Видалити
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        isOpen={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        onConfirm={handleDelete}
+        title="Видалити групу?"
+        description="Цю дію неможливо скасувати. Групу буде видалено назавжди."
+        confirmLabel="Видалити"
+        variant="destructive"
+      />
     </div>
   );
 }

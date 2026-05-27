@@ -8,6 +8,7 @@ import {
   Request,
   UseGuards,
   ParseIntPipe,
+  Patch,
 } from '@nestjs/common';
 import { GroupsService } from './groups.service';
 import { CreateGroupDto } from './dto/create-group.dto';
@@ -22,6 +23,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { UpdateGroupDto } from './dto/update-group.dto';
 
 @ApiTags('Groups')
 @ApiBearerAuth()
@@ -50,6 +52,16 @@ export class GroupsController {
   findAll(@Request() req) {
     const coachId = req.user.userId;
     return this.groupsService.findAll(coachId);
+  }
+
+  @Patch(':id')
+  @Roles(Role.COACH)
+  @ApiOperation({ summary: 'Update group name (coach only)' })
+  @ApiParam({ name: 'id', description: 'Group ID' })
+  @ApiResponse({ status: 200, description: 'Group name updated successfully' })
+  @ApiResponse({ status: 404, description: 'Group not found' })
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateGroupDto) {
+    return this.groupsService.update(id, dto);
   }
 
   @Get(':id')

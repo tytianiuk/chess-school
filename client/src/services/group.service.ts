@@ -21,10 +21,13 @@ export const GroupService = {
     return data;
   },
 
+  async update(id: number, payload: { name: string }) {
+    const { data } = await api.patch(`/groups/${id}`, payload);
+    return data;
+  },
+
   async addMember(groupId: number, studentId: number) {
-    const { data } = await api.post(`/groups/${groupId}/members`, {
-      studentId,
-    });
+    const { data } = await api.post(`/groups/${groupId}/members/${studentId}`);
     return data;
   },
 
@@ -37,6 +40,11 @@ export const GroupService = {
 
   async remove(id: number) {
     await api.delete(`/groups/${id}`);
+  },
+
+  async getStudents() {
+    const { data } = await api.get('/users/my-students');
+    return data;
   },
 };
 
