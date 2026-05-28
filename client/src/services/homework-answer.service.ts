@@ -39,6 +39,13 @@ export const HomeworkAnswerService = {
     return data;
   },
 
+  async getMyHomework(homeworkId: number) {
+    const { data } = await api.get(
+      `/homework-answers/homework/${homeworkId}/my-answer`,
+    );
+    return data;
+  },
+
   async makeMove(id: number, payload: MakeMovePayload) {
     const { data } = await api.patch(`/homework-answers/${id}/move`, payload);
     return data;

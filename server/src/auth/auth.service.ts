@@ -4,7 +4,6 @@ import { RegisterDto } from './dto/register.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt/dist/jwt.service';
 import { LoginDto } from './dto/login.dto';
-import { access } from 'fs';
 import { Role } from '@prisma/client/index-browser';
 
 @Injectable()
@@ -67,5 +66,12 @@ export class AuthService {
         lichessUsername: user.lichessUsername,
       },
     };
+  }
+
+  async getProfile(userId: number) {
+    return this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, fullName: true, role: true },
+    });
   }
 }

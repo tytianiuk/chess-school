@@ -225,6 +225,7 @@ export default function StudentAnswerPage({
                             <ChessDiagram
                               fen={puzzle!.fen}
                               className="mx-auto"
+                              size={320}
                             />
                           </div>
                         </div>

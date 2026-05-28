@@ -338,7 +338,6 @@ export class HomeworkAnswersService {
       where: { id: attemptId },
       data: {
         currentStep: stepAfterServer,
-        attemptCount: { increment: 1 },
         isSolved: isFinished,
         solvedOnFirst: attemptCount === 0 && isFinished,
       },

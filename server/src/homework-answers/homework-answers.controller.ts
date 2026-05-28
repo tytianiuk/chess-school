@@ -93,6 +93,29 @@ export class HomeworkAnswersController {
     return this.homeworkAnswersService.findByStudent(req.user.userId);
   }
 
+  @Get('homework/:homeworkId/my-answer')
+  @Roles(Role.STUDENT)
+  @ApiOperation({
+    summary:
+      'Get details of a specific homework for currently logged in student (student only)',
+  })
+  @ApiParam({ name: 'homeworkId', description: 'ID of the homework' })
+  @ApiResponse({
+    status: 200,
+    description: 'Homework status retrieved successfully',
+  })
+  @ApiResponse({ status: 404, description: 'Answer not found' })
+  async getMyHomeworkDetail(
+    @Param('homeworkId', ParseIntPipe) homeworkId: number,
+    @Request() req,
+  ) {
+    const studentId = req.user.userId;
+    return this.homeworkAnswersService.findByHomeworkAndStudent(
+      homeworkId,
+      studentId,
+    );
+  }
+
   @Patch(':id/move')
   @Roles(Role.STUDENT)
   @ApiOperation({ summary: 'Make a move in a puzzle (student only)' })
