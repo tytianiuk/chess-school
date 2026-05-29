@@ -12,7 +12,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
 import { Undo2, RotateCcw, Check } from 'lucide-react';
 import { COLORS } from '@/lib/constants';
 
@@ -136,20 +135,16 @@ export function SolutionEditor({
     moves.forEach((move, index) => {
       if (isWhiteTurn) {
         result.push(
-          <span key={`num-${index}`} className="text-muted-foreground mr-1">
+          <span key={`num-${index}`} className="text-muted-foreground">
             {moveNumber}.
           </span>,
         );
       }
 
       result.push(
-        <Badge
-          key={`move-${index}`}
-          variant={isWhiteTurn ? 'outline' : 'secondary'}
-          className="mr-1 mb-1"
-        >
+        <span key={`move-${index}`} className="mr-1">
           {move.san}
-        </Badge>,
+        </span>,
       );
 
       if (!isWhiteTurn) {

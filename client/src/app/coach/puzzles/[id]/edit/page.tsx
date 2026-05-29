@@ -2,18 +2,12 @@
 
 import { useState, useCallback, useEffect, use, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import dynamic from 'next/dynamic';
 import useSWR from 'swr';
 import { PuzzleService } from '@/services/puzzle.service';
 import { PuzzleTagService } from '@/services/puzzle-tag.service';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Loader2, Edit3, Award, Hash } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { SolutionEditor } from '@/components/solution-editor';
@@ -21,15 +15,9 @@ import { validateFEN } from '@/lib/fen-validator';
 import { FEN } from '@/lib/constants';
 import type { PuzzleTag, Puzzle as PuzzleType } from '@/lib/types';
 
-const PuzzleBuilder = dynamic(
-  () => import('@/components/puzzle-builder').then((mod) => mod.PuzzleBuilder),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="aspect-square bg-muted animate-pulse rounded-lg" />
-    ),
-  },
-);
+import { PuzzleDetailsCard } from '../../components/puzzle-details-card';
+import { PuzzleBuilderCard } from '../../components/puzzle-builder-card';
+import { PuzzleTagsCard } from '../../components/puzzle-tags-card';
 
 export default function EditPuzzlePage({
   params,
@@ -53,6 +41,7 @@ export default function EditPuzzlePage({
   );
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [solutionEditorOpen, setSolutionEditorOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -62,8 +51,6 @@ export default function EditPuzzlePage({
     rating: '' as number | '',
     tagIds: [] as number[],
   });
-
-  const [solutionEditorOpen, setSolutionEditorOpen] = useState(false);
 
   useEffect(() => {
     if (puzzle) {
@@ -94,6 +81,13 @@ export default function EditPuzzlePage({
     });
   }, []);
 
+  const handleDetailsChange = useCallback(
+    (fields: Partial<typeof formData>) => {
+      setFormData((prev) => ({ ...prev, ...fields }));
+    },
+    [],
+  );
+
   const handleOpenSolutionEditor = () => {
     const { isValid, errorMessage } = validateFEN(formData.fen);
 
@@ -109,7 +103,7 @@ export default function EditPuzzlePage({
     toast.success('Рішення збережено');
   }, []);
 
-  const handleToggleTag = (tagId: number) => {
+  const handleToggleTag = useCallback((tagId: number) => {
     setFormData((prev) => {
       const isAlreadySelected = prev.tagIds.includes(tagId);
       return {
@@ -119,7 +113,7 @@ export default function EditPuzzlePage({
           : [...prev.tagIds, tagId],
       };
     });
-  };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -159,14 +153,12 @@ export default function EditPuzzlePage({
 
   if (isLoading) {
     return (
-      <div className="max-w-5xl mx-auto space-y-6">
+      <div className="max-w-5xl mx-auto space-y-6 px-4 py-2">
         <Skeleton className="h-12 w-64" />
-        <div className="grid gap-6 lg:grid-cols-2">
-          <Skeleton className="aspect-square" />
-          <div className="space-y-4">
-            <Skeleton className="h-40" />
-            <Skeleton className="h-32" />
-          </div>
+        <div className="grid gap-6 lg:grid-cols-3">
+          <Skeleton className="h-96" />
+          <Skeleton className="h-96" />
+          <Skeleton className="h-96" />
         </div>
       </div>
     );
@@ -184,7 +176,7 @@ export default function EditPuzzlePage({
   }
 
   return (
-    <div className=" mx-auto space-y-6 px-4 py-2">
+    <div className="mx-auto space-y-6 px-4 py-2">
       <div className="flex items-center gap-4">
         <Link href="/coach/puzzles">
           <Button variant="ghost" size="icon">
@@ -200,176 +192,28 @@ export default function EditPuzzlePage({
 
       <form onSubmit={handleSubmit}>
         <div className="grid gap-6 lg:grid-cols-3">
-          <div className="space-y-6">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle>Деталі задачі</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">
-                    Назва задачі (необов&apos;язково)
-                  </Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) =>
-                      setFormData({ ...formData, title: e.target.value })
-                    }
-                    placeholder="Мат у 2 ходи"
-                  />
-                </div>
+          <PuzzleDetailsCard
+            title={formData.title}
+            rating={formData.rating}
+            solution={formData.solution}
+            hint={formData.hint}
+            isPuzzleReady={isPuzzleReady as boolean}
+            onOpenSolutionEditor={handleOpenSolutionEditor}
+            onChange={handleDetailsChange}
+          />
 
-                <div className="space-y-2">
-                  <Label htmlFor="rating" className="flex items-center gap-1.5">
-                    <Award className="h-4 w-4 text-amber-500" />
-                    Складність задачі
-                  </Label>
-                  <Input
-                    id="rating"
-                    type="number"
-                    min={300}
-                    max={3000}
-                    value={formData.rating}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        rating: parseInt(e.target.value, 10),
-                      })
-                    }
-                    placeholder="1500"
-                  />
-                </div>
+          <PuzzleBuilderCard
+            initialFen={initialFenRef.current || puzzle.fen}
+            onFenChange={handleFenChange}
+          />
 
-                <div className="space-y-2">
-                  <Label>Рішення *</Label>
-                  <div className="flex gap-2">
-                    <div className="flex-1 rounded-md border bg-muted/50 px-3 py-2 min-h-[50px] flex items-center">
-                      {formData.solution ? (
-                        <div className="flex flex-wrap gap-1">
-                          {formData.solution.split(' ').map((move, i) => (
-                            <Badge
-                              key={i}
-                              variant="secondary"
-                              className="font-mono"
-                            >
-                              {move}
-                            </Badge>
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground text-xs italic">
-                          Рішення не введено
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full h-9 text-xs"
-                    onClick={handleOpenSolutionEditor}
-                    disabled={!isPuzzleReady}
-                  >
-                    <Edit3 className="h-3.5 w-3.5 mr-1.5" />
-                    Редагувати ходи рішення
-                  </Button>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="hint">Підказка для учня</Label>
-                  <Textarea
-                    id="hint"
-                    value={formData.hint}
-                    onChange={(e) =>
-                      setFormData({ ...formData, hint: e.target.value })
-                    }
-                    placeholder="Зверніть увагу на слабкість поля f7"
-                    rows={2}
-                    className="resize-none text-sm"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-          <Card>
-            <CardHeader>
-              <CardTitle>Конструктор позиції</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <PuzzleBuilder
-                initialFen={initialFenRef.current || puzzle.fen}
-                onFenChange={handleFenChange}
-              />
-            </CardContent>
-          </Card>
-
-          <div className="space-y-6">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle>Теми</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {availableTags && availableTags.length > 0 ? (
-                  <div className="flex flex-wrap gap-1.5">
-                    {availableTags.map((tag) => {
-                      const isSelected = formData.tagIds.includes(tag.id);
-                      return (
-                        <Badge
-                          key={tag.id}
-                          variant={isSelected ? 'default' : 'outline'}
-                          className={`cursor-pointer select-none px-2.5 py-0.5 text-xs transition-colors rounded-full ${
-                            isSelected
-                              ? 'bg-blue-600 hover:bg-blue-700 text-white border-transparent'
-                              : 'text-muted-foreground hover:bg-muted'
-                          }`}
-                          onClick={() => handleToggleTag(tag.id)}
-                        >
-                          <Hash className="h-3 w-3 mr-0.5 opacity-60" />
-                          {tag.label}
-                        </Badge>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="text-xs text-muted-foreground italic text-center py-2">
-                    Довідник тактик порожній.
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-3">
-                <div className="text-xs font-mono text-muted-foreground truncate select-all bg-muted/60 p-2 rounded border">
-                  <span className="font-semibold select-none mr-2">FEN:</span>
-                  {formData.fen}
-                </div>
-              </CardContent>
-            </Card>
-
-            <div className="flex gap-3">
-              <Link href="/coach/puzzles" className="flex-1">
-                <Button type="button" variant="outline" className="w-full">
-                  Скасувати
-                </Button>
-              </Link>
-              <Button
-                type="submit"
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Збереження...
-                  </>
-                ) : (
-                  'Зберегти зміни'
-                )}
-              </Button>
-            </div>
-          </div>
+          <PuzzleTagsCard
+            availableTags={availableTags}
+            selectedTagIds={formData.tagIds}
+            fen={formData.fen}
+            isSubmitting={isSubmitting}
+            onToggleTag={handleToggleTag}
+          />
         </div>
       </form>
 

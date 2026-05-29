@@ -10,17 +10,12 @@ import {
 import { ManualVariation } from './manual-variations-panel';
 import { ChessNotation } from '../../../../../components/chess-notation';
 import { Button } from '@/components/ui/button';
+import { getMoveCountText } from '@/lib/get-count-text';
 interface SavedVariationsListProps {
   variations: ManualVariation[];
   activeVariationId: string | null;
   onLoad: (variation: ManualVariation) => void;
   onDelete: (variationId: string) => void;
-}
-
-function getMoveCountText(count: number): string {
-  if (count === 1) return 'хід';
-  if (count >= 2 && count <= 4) return 'ходи';
-  return 'ходів';
 }
 
 export function SavedVariationsList({
