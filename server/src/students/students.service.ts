@@ -19,19 +19,38 @@ export class StudentsService {
     });
   }
 
-  async findUnassignedStudents() {
+  async findUnassignedStudents(search?: string) {
     return this.prisma.user.findMany({
       where: {
         role: 'STUDENT',
         coachId: null,
+        ...(search
+          ? {
+              OR: [
+                { fullName: { contains: search, mode: 'insensitive' } },
+                { email: { contains: search, mode: 'insensitive' } },
+              ],
+            }
+          : {}),
       },
       select: { id: true, email: true, fullName: true },
+      take: 10,
     });
   }
 
-  async getMyStudents(coachId: number) {
+  async getMyStudents(coachId: number, search?: string) {
     return this.prisma.user.findMany({
-      where: { coachId },
+      where: {
+        coachId,
+        ...(search
+          ? {
+              OR: [
+                { fullName: { contains: search, mode: 'insensitive' } },
+                { email: { contains: search, mode: 'insensitive' } },
+              ],
+            }
+          : {}),
+      },
       select: { id: true, email: true, fullName: true },
     });
   }

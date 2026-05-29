@@ -9,10 +9,16 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, BookOpen, Users } from 'lucide-react';
+import { Plus, BookOpen, Users, User } from 'lucide-react';
 
 export function DashboardQuickActions() {
   const actions = [
+    {
+      href: '/coach/students/new',
+      icon: User,
+      title: 'Знайти учнів',
+      description: 'Тренуй нових дітей та дорослих',
+    },
     {
       href: '/coach/puzzles/new',
       icon: Plus,
@@ -41,7 +47,7 @@ export function DashboardQuickActions() {
           Почніть роботу з основними функціями платформи
         </CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-4 sm:grid-cols-3">
+      <CardContent className="grid gap-4 sm:grid-cols-2">
         {actions.map((action) => (
           <Link key={action.href} href={action.href}>
             <Button

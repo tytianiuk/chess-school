@@ -3,12 +3,13 @@
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Puzzle, BookOpen, Users } from 'lucide-react';
+import { Puzzle, BookOpen, Users, User } from 'lucide-react';
 
 interface DashboardStatsProps {
   puzzlesCount: number;
   homeworksCount: number;
   groupsCount: number;
+  studentsCount: number;
   isLoading: boolean;
 }
 
@@ -16,9 +17,18 @@ export function DashboardStats({
   puzzlesCount,
   homeworksCount,
   groupsCount,
+  studentsCount,
   isLoading,
 }: DashboardStatsProps) {
   const stats = [
+    {
+      title: 'Учнів',
+      value: studentsCount,
+      icon: User,
+      href: '/coach/students',
+      color: 'text-red-600',
+      bgColor: 'bg-red-100',
+    },
     {
       title: 'Задачі',
       value: puzzlesCount,
@@ -46,7 +56,7 @@ export function DashboardStats({
   ];
 
   return (
-    <div className="grid gap-4 md:grid-cols-3">
+    <div className="grid gap-4 md:grid-cols-4">
       {stats.map((stat) => (
         <Link key={stat.href} href={stat.href}>
           <Card className="hover:border-primary/50 transition-colors cursor-pointer group">

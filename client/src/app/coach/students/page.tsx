@@ -1,152 +1,157 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { UserService } from '@/services/user.service';
-import { UserPlus, UserMinus, GraduationCap } from 'lucide-react';
+import { useState } from 'react';
+import useSWR from 'swr';
+import { StudentService } from '@/services/student.service';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
+
+import {
+  Search,
+  Mail,
+  Loader2,
+  Users,
+  UserMinus,
+  UserPlus,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import type { User } from '@/lib/types';
+import { getStudentCountText } from '@/lib/get-count-text';
+import Link from 'next/link';
 
 export default function CoachStudentsPage() {
-  const [myStudents, setMyStudents] = useState([]);
-  const [available, setAvailable] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isActionPending, setIsActionPending] = useState<
+    Record<number, boolean>
+  >({});
 
-  const fetchData = async () => {
+  const {
+    data: myStudents,
+    isLoading: isMyStudentsLoading,
+    mutate: mutateMyStudents,
+  } = useSWR(['my-students', searchQuery], () =>
+    StudentService.getMyStudents(searchQuery),
+  );
+
+  const handleUnassignStudent = async (studentId: number) => {
+    setIsActionPending((prev) => ({ ...prev, [studentId]: true }));
     try {
-      setIsLoading(true);
-      const [myStudentsData, unassignedData] = await Promise.all([
-        UserService.getMyStudents(),
-        UserService.getUnassignedStudents(),
-      ]);
-
-      setMyStudents(myStudentsData);
-      setAvailable(unassignedData);
-    } catch (err) {
-      console.error('Error loading data', err);
+      await StudentService.unassignStudent(studentId);
+      toast.success('Учня успішно вилучено з вашого списку');
+      mutateMyStudents();
+    } catch {
+      toast.error('Помилка при вилученні учня');
     } finally {
-      setIsLoading(false);
+      setIsActionPending((prev) => ({ ...prev, [studentId]: false }));
     }
   };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const handleAssign = async (id: number) => {
-    try {
-      await UserService.assignStudent(id);
-      fetchData();
-    } catch (err) {
-      alert('Cannot add student');
-    }
-  };
-
-  const handleUnassign = async (id: number) => {
-    if (confirm('You sure you want to unassign the student?')) {
-      try {
-        await UserService.unassignStudent(id);
-        fetchData();
-      } catch (err) {
-        alert('Cannot unassign student');
-      }
-    }
-  };
-
-  if (isLoading && myStudents.length === 0) {
-    return <div className="text-center py-10">Loading student list...</div>;
-  }
 
   return (
-    <div className="space-y-8 px-4 py-6">
-      <section>
-        <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-slate-800">
-          <GraduationCap className="text-indigo-600" />
-          Мої учні ({myStudents.length})
-        </h3>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {myStudents.map((student: any) => (
-            <div
-              key={student.id}
-              className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center hover:border-indigo-200 transition-colors"
-            >
-              <div>
-                <p className="font-semibold text-slate-900">
-                  {student.fullName}
-                </p>
-                <p className="text-sm text-slate-500">{student.email}</p>
-              </div>
-              <button
-                onClick={() => handleUnassign(student.id)}
-                className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                title="Відкріпити учня"
-              >
-                <UserMinus size={20} />
-              </button>
+    <div className="space-y-6 px-4 py-2 max-w-4xl mx-auto">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-3xl font-bold tracking-tight">Мої учні</h1>
+      </div>
+
+      <Card>
+        <CardContent>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Швидкий пошук серед своїх учнів за ім'ям або email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 h-11"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Список вихованців</CardTitle>
+          <CardDescription>
+            Загальна кількість активних учнів під вашим керівництвом:{' '}
+            <span className="font-bold text-foreground">
+              {myStudents?.length ?? 0}{' '}
+              {getStudentCountText(myStudents?.length ?? 0)}
+            </span>
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isMyStudentsLoading ? (
+            <div className="flex items-center justify-center py-12 text-muted-foreground">
+              <Loader2 className="h-6 w-6 animate-spin mr-2" />
+              Завантажуємо список ваших розрядників...
             </div>
-          ))}
-          {myStudents.length === 0 && (
-            <div className="col-span-full py-8 text-center border-2 border-dashed border-slate-200 rounded-xl text-slate-400">
-              У вас ще немає закріплених учнів
+          ) : myStudents && myStudents.length > 0 ? (
+            <div className="space-y-3">
+              {myStudents.map((student: User) => {
+                const isPending = isActionPending[student.id];
+
+                return (
+                  <div
+                    key={student.id}
+                    className="flex items-center justify-between p-4 rounded-xl border bg-background hover:shadow-sm transition-all group"
+                  >
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <div className="h-10 w-10 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-sm shrink-0">
+                        {student.fullName.substring(0, 2).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-semibold text-sm truncate">
+                          {student.fullName}
+                        </div>
+                        <div className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                          <Mail className="h-3 w-3 shrink-0" />
+                          <span className="truncate">{student.email}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={isPending}
+                      onClick={() => handleUnassignStudent(student.id)}
+                      className="text-red-600 border-red-100 hover:bg-red-50 hover:text-red-700 gap-1.5 h-9 text-xs transition-colors"
+                    >
+                      {isPending ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <UserMinus className="h-3.5 w-3.5" />
+                      )}
+                      Відкріпити
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-12 border border-dashed rounded-xl">
+              <Users className="h-10 w-10 mx-auto mb-2 opacity-30 text-muted-foreground" />
+              <p className="text-sm font-medium text-muted-foreground">
+                {searchQuery
+                  ? "Учня з таким ім'ям не знайдено серед ваших підопічних"
+                  : 'У вас ще немає закріплених учнів. Натисніть кнопку "Додати учня" знизу.'}
+              </p>
             </div>
           )}
-        </div>
-      </section>
-
-      <section>
-        <h3 className="text-xl font-bold mb-4 text-slate-800">
-          Вільні учні (без тренера)
-        </h3>
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>
-                  <th className="px-6 py-3 text-xs font-bold uppercase tracking-wider text-slate-500">
-                    Ім'я
-                  </th>
-                  <th className="px-6 py-3 text-xs font-bold uppercase tracking-wider text-slate-500">
-                    Email
-                  </th>
-                  <th className="px-6 py-3 text-xs font-bold uppercase tracking-wider text-slate-500 text-right">
-                    Дія
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {available.map((student: any) => (
-                  <tr
-                    key={student.id}
-                    className="hover:bg-slate-50 transition-colors group"
-                  >
-                    <td className="px-6 py-4 text-sm font-medium text-slate-900">
-                      {student.fullName}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-slate-500">
-                      {student.email}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={() => handleAssign(student.id)}
-                        className="inline-flex items-center gap-1 text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
-                      >
-                        <UserPlus size={16} /> Додати до групи
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {available.length === 0 && !isLoading && (
-                  <tr>
-                    <td
-                      colSpan={3}
-                      className="px-6 py-10 text-center text-slate-400 italic"
-                    >
-                      Наразі немає вільних учнів у системі
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
+        </CardContent>
+      </Card>
+      <Link href="/coach/students/new" className="flex justify-center">
+        <Button className="w-3/4 bg-blue-600 hover:bg-blue-700 text-white text-md py-4">
+          <UserPlus className="mr-2 !h-5 !w-5" />
+          Додати учня
+        </Button>
+      </Link>
     </div>
   );
 }

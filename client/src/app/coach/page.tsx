@@ -7,6 +7,7 @@ import { HomeworkService } from '@/services/homework.service';
 import { DashboardStats } from './components/dashboard-stats';
 import { DashboardQuickActions } from './components/dashboard-quick-actions';
 import { RecentHomeworksCard } from './components/recent-homeworks-card';
+import { StudentService } from '@/services/student.service';
 
 export default function CoachDashboardPage() {
   const { data: puzzles, isLoading: puzzlesLoading } = useSWR(
@@ -21,8 +22,13 @@ export default function CoachDashboardPage() {
     'homeworks',
     HomeworkService.getAll,
   );
+  const { data: students, isLoading: studentsLoading } = useSWR(
+    'students',
+    () => StudentService.getMyStudents(''),
+  );
 
-  const isStatsLoading = puzzlesLoading || homeworksLoading || groupsLoading;
+  const isStatsLoading =
+    puzzlesLoading || homeworksLoading || groupsLoading || studentsLoading;
 
   return (
     <div className="space-y-6 px-4 py-2 max-w-5xl mx-auto">
@@ -37,6 +43,7 @@ export default function CoachDashboardPage() {
         puzzlesCount={puzzles?.meta.total ?? 0}
         homeworksCount={homeworks?.length ?? 0}
         groupsCount={groups?.length ?? 0}
+        studentsCount={students?.length ?? 0}
         isLoading={isStatsLoading}
       />
 

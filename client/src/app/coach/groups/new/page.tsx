@@ -20,12 +20,13 @@ import { ArrowLeft, Loader2, Search, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { User } from '@/lib/types';
+import { StudentService } from '@/services/student.service';
 
 export default function NewGroupPage() {
   const router = useRouter();
   const { data: students, isLoading: studentsLoading } = useSWR(
     'students',
-    GroupService.getStudents,
+    StudentService.getMyStudents,
   );
 
   const [isSubmitting, setIsSubmitting] = useState(false);

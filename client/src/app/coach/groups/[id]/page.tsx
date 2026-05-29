@@ -29,6 +29,8 @@ import { toast } from 'sonner';
 import { GroupMember, User } from '@/lib/types';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { InlineEditor } from '@/components/inline-editor';
+import { StudentService } from '@/services/student.service';
+import { getStudentCountText } from '@/lib/get-count-text';
 
 export default function GroupDetailPage({
   params,
@@ -46,7 +48,10 @@ export default function GroupDetailPage({
     GroupService.getById(groupId),
   );
 
-  const { data: allStudents } = useSWR('students', GroupService.getStudents);
+  const { data: allStudents } = useSWR(
+    'students',
+    StudentService.getMyStudents,
+  );
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [removeStudentId, setRemoveStudentId] = useState<number | null>(null);
@@ -165,7 +170,8 @@ export default function GroupDetailPage({
             />
 
             <p className="text-muted-foreground">
-              {group.members?.length ?? 0} учнів
+              {group.members?.length ?? 0}{' '}
+              {getStudentCountText(group.members?.length)}
             </p>
           </div>
         </div>

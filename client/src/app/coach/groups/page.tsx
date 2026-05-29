@@ -18,6 +18,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Plus, Search, Pencil, Trash2, Users, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/confirm-dialog';
+import { getStudentCountText } from '@/lib/get-count-text';
 
 export default function GroupsPage() {
   const {
@@ -91,7 +92,8 @@ export default function GroupsPage() {
                   <div className="space-y-1">
                     <CardTitle className="text-lg">{group.name}</CardTitle>
                     <CardDescription>
-                      {group._count?.members ?? 0} учнів
+                      {group._count?.members ?? 0}{' '}
+                      {getStudentCountText(group._count?.members ?? 0)}
                     </CardDescription>
                   </div>
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">

@@ -5,6 +5,7 @@ import {
   Param,
   UseGuards,
   Request,
+  Query,
 } from '@nestjs/common';
 import { StudentsService } from './students.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -14,13 +15,14 @@ import { Role } from '@prisma/client';
 import {
   ApiBearerAuth,
   ApiOperation,
+  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 @ApiTags('Students')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('users')
+@Controller('students')
 export class StudentsController {
   constructor(private readonly studentsService: StudentsService) {}
 
@@ -33,16 +35,29 @@ export class StudentsController {
 
   @Get('unassigned')
   @Roles(Role.COACH)
-  @ApiOperation({ summary: 'A list of unassigned students' })
-  getUnassigned() {
-    return this.studentsService.findUnassignedStudents();
+  @ApiOperation({ summary: 'A list of unassigned students with search' })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    type: String,
+    description: 'Search by name or email',
+  })
+  getUnassigned(@Query('search') search?: string) {
+    return this.studentsService.findUnassignedStudents(search);
   }
 
   @Get('my-students')
   @Roles(Role.COACH)
-  @ApiOperation({ summary: 'A list of my students' })
-  getMyStudents(@Request() req) {
-    return this.studentsService.getMyStudents(req.user.userId);
+  @ApiOperation({ summary: 'A list of my students with search filtration' })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    type: String,
+    description: 'Search by student name or email',
+  })
+  getMyStudents(@Request() req: any, @Query('search') search?: string) {
+    const coachId = req.user.userId ? +req.user.userId : +req.user.id;
+    return this.studentsService.getMyStudents(coachId, search);
   }
 
   @Patch('assign/:studentId')
@@ -52,11 +67,10 @@ export class StudentsController {
     status: 200,
     description: 'Student successfully added to your group',
   })
-  assignStudent(@Param('studentId') studentId: string, @Request() req) {
-    return this.studentsService.assignStudentToCoach(
-      req.user.userId,
-      +studentId,
-    );
+  assignStudent(@Param('studentId') studentId: string, @Request() req: any) {
+    const coachId = req.user.userId ? +req.user.userId : +req.user.id;
+
+    return this.studentsService.assignStudentToCoach(coachId, +studentId);
   }
 
   @Patch('unassign/:studentId')

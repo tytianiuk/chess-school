@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { getPuzzlesCountText } from '@/lib/get-count-text';
+import { getPuzzleCountText } from '@/lib/get-count-text';
 import { Homework } from '@/lib/types';
 import { ArrowLeft, User, Users } from 'lucide-react';
 import Link from 'next/dist/client/link';
@@ -29,7 +29,7 @@ export function HomeworkHeader({ homework }: { homework: Homework }) {
           <span>•</span>
           <span>
             {homework.puzzles?.length ?? 0}{' '}
-            {getPuzzlesCountText(homework.puzzles?.length ?? 0)}
+            {getPuzzleCountText(homework.puzzles?.length ?? 0)}
           </span>
         </div>
       </div>

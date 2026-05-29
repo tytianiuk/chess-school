@@ -41,11 +41,6 @@ export const GroupService = {
   async remove(id: number) {
     await api.delete(`/groups/${id}`);
   },
-
-  async getStudents() {
-    const { data } = await api.get('/users/my-students');
-    return data;
-  },
 };
 
 export default GroupService;

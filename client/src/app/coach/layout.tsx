@@ -1,6 +1,12 @@
 'use client';
 
-import { LayoutDashboard, Puzzle, BookOpen, Users } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Puzzle,
+  BookOpen,
+  Users,
+  UserPlus,
+} from 'lucide-react';
 import { BaseLayout } from '@/components/layouts/base-layout';
 
 const coachNavItems = [
@@ -8,6 +14,7 @@ const coachNavItems = [
   { href: '/coach/puzzles', label: 'Задачі', icon: Puzzle },
   { href: '/coach/homework', label: 'Завдання', icon: BookOpen },
   { href: '/coach/groups', label: 'Групи', icon: Users },
+  { href: '/coach/students', label: 'Учні', icon: UserPlus },
 ];
 
 export default function CoachLayout({
