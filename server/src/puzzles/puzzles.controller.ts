@@ -42,6 +42,27 @@ export class PuzzlesController {
     return this.puzzlesService.create(dto);
   }
 
+  @Get('self-study')
+  @Roles(Role.COACH, Role.STUDENT)
+  @ApiOperation({
+    summary: 'Get filtered puzzles for self-study mode (coach & student)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Filtered puzzles retrieved successfully',
+  })
+  findForSelfStudy(
+    @Query('tagIds') tagIds?: string,
+    @Query('minRating') minRating?: string,
+    @Query('maxRating') maxRating?: string,
+  ) {
+    return this.puzzlesService.findForSelfStudy({
+      tagIds,
+      minRating,
+      maxRating,
+    });
+  }
+
   @Get()
   @Roles(Role.COACH)
   @ApiOperation({ summary: 'Get all puzzles from the bank (coach only)' })
@@ -51,8 +72,8 @@ export class PuzzlesController {
   }
 
   @Get(':id')
-  @Roles(Role.COACH)
-  @ApiOperation({ summary: 'Get a puzzle by ID (coach only)' })
+  @Roles(Role.COACH, Role.STUDENT)
+  @ApiOperation({ summary: 'Get a puzzle by ID (coach & student)' })
   @ApiParam({ name: 'id', description: 'Unique identifier of the puzzle' })
   @ApiResponse({ status: 200, description: 'Puzzle found' })
   @ApiResponse({ status: 404, description: 'Puzzle not found' })

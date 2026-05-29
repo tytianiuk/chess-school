@@ -8,6 +8,7 @@ import { HomeworksModule } from './homework/homeworks.module';
 import { StudentsModule } from './students/students.module';
 import { HomeworkAnswersModule } from './homework-answers/homework-answers.module';
 import { GroupsModule } from './groups/groups.module';
+import { TagsModule } from './tags/tags.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { GroupsModule } from './groups/groups.module';
     HomeworkAnswersModule,
     StudentsModule,
     GroupsModule,
+    TagsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

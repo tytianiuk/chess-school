@@ -2,8 +2,15 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
-import type { HomeworkPuzzle, PuzzleAttempt } from '@/lib/types';
+import {
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  AlertCircle,
+  XCircle,
+  Clock,
+} from 'lucide-react';
+import type { HomeworkPuzzle, PuzzleAttempt, PuzzleStatus } from '@/lib/types';
 
 interface PuzzleNavigationCardProps {
   currentIndex: number;
@@ -12,6 +19,40 @@ interface PuzzleNavigationCardProps {
   puzzleAttempts: PuzzleAttempt[];
   onNavigate: (index: number) => void;
 }
+
+const puzzleNavConfig: Record<
+  PuzzleStatus,
+  {
+    icon: React.ElementType;
+    activeClass: string;
+    inactiveClass: string;
+  }
+> = {
+  SOLVED: {
+    icon: CheckCircle2,
+    activeClass:
+      'bg-green-600 hover:bg-green-700 text-white border-transparent',
+    inactiveClass:
+      'text-green-600 border-green-200 bg-green-50/50 hover:bg-green-50',
+  },
+  REVIEW_PENDING: {
+    icon: AlertCircle,
+    activeClass:
+      'bg-yellow-500 hover:bg-yellow-600 text-black border-transparent',
+    inactiveClass:
+      'text-yellow-600 border-yellow-200 bg-yellow-50/50 hover:bg-yellow-50',
+  },
+  FAILED: {
+    icon: XCircle,
+    activeClass: 'bg-red-600 hover:bg-red-700 text-white border-transparent',
+    inactiveClass: 'text-red-600 border-red-200 bg-red-50/50 hover:bg-red-50',
+  },
+  PENDING: {
+    icon: Clock,
+    activeClass: 'bg-blue-600 text-white hover:bg-blue-700 border-transparent',
+    inactiveClass: 'bg-background hover:bg-muted border-border text-foreground',
+  },
+};
 
 export function PuzzleNavigationCard({
   currentIndex,
@@ -56,20 +97,25 @@ export function PuzzleNavigationCard({
               (a: PuzzleAttempt) => a.homeworkPuzzleId === p.id,
             );
             const isCurrent = index === currentIndex;
+            const status = (attempt?.status || 'PENDING') as PuzzleStatus;
+            const config = puzzleNavConfig[status];
+            const Icon = config.icon;
+            const statusColorClass = isCurrent
+              ? config.activeClass
+              : config.inactiveClass;
+
+            const content =
+              status === 'PENDING' ? index + 1 : <Icon className="h-4 w-4" />;
 
             return (
               <Button
                 key={p.id}
-                variant={isCurrent ? 'default' : 'outline'}
+                variant="outline"
                 size="sm"
-                className="w-10 h-10 p-0"
+                className={`w-10 h-10 p-0 font-mono font-bold text-sm rounded-lg transition-all ${statusColorClass}`}
                 onClick={() => onNavigate(index)}
               >
-                {attempt?.isSolved ? (
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
-                ) : (
-                  index + 1
-                )}
+                {content}
               </Button>
             );
           })}

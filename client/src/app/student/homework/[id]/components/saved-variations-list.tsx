@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/accordion';
 
 import { ManualVariation } from './manual-variations-panel';
-import { ChessNotation } from './chess-notation';
+import { ChessNotation } from '../../../../../components/chess-notation';
 import { Button } from '@/components/ui/button';
 interface SavedVariationsListProps {
   variations: ManualVariation[];

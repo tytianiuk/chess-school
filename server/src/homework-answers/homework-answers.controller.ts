@@ -26,6 +26,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { UpdateAttemptStatusDto } from './dto/update-attempt-status.dtp';
 
 @ApiTags('Homework Answers')
 @ApiBearerAuth()
@@ -114,6 +115,16 @@ export class HomeworkAnswersController {
       homeworkId,
       studentId,
     );
+  }
+
+  @Patch('attempts/:id/status')
+  @Roles(Role.COACH)
+  @ApiOperation({ summary: 'Change status of a specific attempt (coach only)' })
+  updateAttemptStatus(
+    @Param('id') id: string,
+    @Body() dto: UpdateAttemptStatusDto,
+  ) {
+    return this.homeworkAnswersService.updateAttemptStatus(+id, dto);
   }
 
   @Patch(':id/move')

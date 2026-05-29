@@ -2,7 +2,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Plus, Undo2 } from 'lucide-react';
-import { ChessNotation } from './chess-notation';
+import { ChessNotation } from '../../../../../components/chess-notation';
 
 interface CurrentVariationEditorProps {
   moves: string[];

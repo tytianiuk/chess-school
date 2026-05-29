@@ -1,4 +1,12 @@
-import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsArray,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreatePuzzleDto {
@@ -29,22 +37,26 @@ export class CreatePuzzleDto {
   })
   solution!: string;
 
-  @IsString()
+  @IsNumber()
   @IsOptional()
+  @Min(300, { message: 'Рейтинг не може бути меншим за 300' })
+  @Max(3000, { message: 'Рейтинг не може бути більшим за 3000' })
   @ApiProperty({
-    example: 'Consider the knight fork',
-    description: 'Puzzle hint',
+    example: 1500,
+    description: 'Шаховий рейтинг складності задачі (ELO)',
     required: false,
+    default: 1500,
   })
-  hint?: string;
+  rating?: number;
 
   @IsArray()
-  @IsString({ each: true })
+  @IsNumber({}, { each: true, message: 'Кожен тег має бути числовим ID' })
   @IsOptional()
   @ApiProperty({
-    example: ['mate', 'opening'],
-    description: 'Tags for filtering puzzles',
+    example: [1, 3],
+    description: 'Масив ідентифікаторів (ID) тегів тактики з бази даних',
     required: false,
+    type: [Number],
   })
-  tags?: string[];
+  tagIds?: number[];
 }

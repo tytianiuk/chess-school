@@ -37,6 +37,7 @@ import {
   Puzzle as PuzzleIcon,
   Users,
   User as UserIcon,
+  Award,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -73,13 +74,17 @@ export default function NewHomeworkPage() {
   const [selectedPuzzles, setSelectedPuzzles] = useState<SelectedPuzzle[]>([]);
   const [puzzleSearch, setPuzzleSearch] = useState('');
 
+  // ✨ ОНОВЛЕНО: Безпечний пошук за новими об'єктами тегів (за label та name) + за рейтингом складності
   const filteredPuzzles = puzzles?.data?.filter(
-    (puzzle: Puzzle) =>
+    (puzzle: any) =>
       !selectedPuzzles.some((sp) => sp.puzzleId === puzzle.id) &&
       (puzzle.title?.toLowerCase().includes(puzzleSearch.toLowerCase()) ||
         puzzle.fen.toLowerCase().includes(puzzleSearch.toLowerCase()) ||
-        puzzle.tags.some((tag) =>
-          tag.toLowerCase().includes(puzzleSearch.toLowerCase()),
+        puzzle.rating?.toString().includes(puzzleSearch) ||
+        puzzle.tags?.some(
+          (tag: any) =>
+            tag.label.toLowerCase().includes(puzzleSearch.toLowerCase()) ||
+            tag.name.toLowerCase().includes(puzzleSearch.toLowerCase()),
         )),
   );
 
@@ -149,7 +154,7 @@ export default function NewHomeworkPage() {
   const isLoading = puzzlesLoading || groupsLoading || studentsLoading;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6 px-4 py-2">
       <div className="flex items-center gap-4">
         <Link href="/coach/homework">
           <Button variant="ghost" size="icon">
@@ -189,6 +194,7 @@ export default function NewHomeworkPage() {
                 }
                 placeholder="Виконайте всі задачі до наступного заняття"
                 rows={3}
+                className="resize-none text-sm"
               />
             </div>
           </CardContent>
@@ -310,102 +316,126 @@ export default function NewHomeworkPage() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Пошук задач..."
+                placeholder="Пошук задач за назвою, FEN, рейтингом чи тегами..."
                 value={puzzleSearch}
                 onChange={(e) => setPuzzleSearch(e.target.value)}
                 className="pl-10"
               />
             </div>
 
+            {/* Випадаючий список пошуку задач */}
             {puzzleSearch && (
-              <div className="border rounded-lg max-h-48 overflow-y-auto">
+              <div className="border rounded-lg max-h-56 overflow-y-auto bg-background shadow-md">
                 {puzzlesLoading ? (
                   <div className="p-4">
                     <Skeleton className="h-10 w-full" />
                   </div>
                 ) : filteredPuzzles && filteredPuzzles.length > 0 ? (
-                  filteredPuzzles.slice(0, 10).map((puzzle) => (
+                  filteredPuzzles.slice(0, 10).map((puzzle: any) => (
                     <div
                       key={puzzle.id}
-                      className="flex items-center justify-between p-3 hover:bg-accent cursor-pointer border-b last:border-b-0"
+                      className="flex items-center justify-between p-3 hover:bg-accent cursor-pointer border-b last:border-b-0 gap-4"
                       onClick={() => handleAddPuzzle(puzzle.id)}
                     >
-                      <div>
-                        <div className="font-medium">
-                          {puzzle.title || `Задача #${puzzle.id}`}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-sm flex items-center gap-2">
+                          <span className="truncate">
+                            {puzzle.title || `Задача #${puzzle.id}`}
+                          </span>
+                          <span className="text-[11px] font-mono bg-amber-50 text-amber-700 px-1.5 py-0.2 rounded border border-amber-200 flex items-center shrink-0">
+                            <Award className="h-3 w-3 mr-0.5" />
+                            {puzzle.rating || 1500}
+                          </span>
                         </div>
-                        <div className="text-xs text-muted-foreground font-mono truncate max-w-md">
+                        <div className="text-xs text-muted-foreground font-mono truncate max-w-xl mt-0.5">
                           {puzzle.fen}
                         </div>
                       </div>
-                      <Plus className="h-4 w-4 text-muted-foreground" />
+                      <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
                     </div>
                   ))
                 ) : (
-                  <div className="p-4 text-center text-muted-foreground">
+                  <div className="p-4 text-center text-muted-foreground text-sm">
                     Задач не знайдено
                   </div>
                 )}
               </div>
             )}
 
+            {/* Список уже вибраних задач */}
             {selectedPuzzles.length > 0 ? (
-              <div className="space-y-2">
-                <Label>Вибрані задачі ({selectedPuzzles.length})</Label>
+              <div className="space-y-2 pt-2">
+                <Label className="text-sm font-semibold">
+                  Вибрані задачі ({selectedPuzzles.length})
+                </Label>
                 <div className="space-y-2">
                   {selectedPuzzles.map((sp, index) => {
                     const puzzle = puzzles?.data?.find(
-                      (p) => p.id === sp.puzzleId,
-                    );
+                      (p: any) => p.id === sp.puzzleId,
+                    ) as any;
                     return (
                       <div
                         key={sp.puzzleId}
-                        className="flex items-center gap-3 p-3 rounded-lg border"
+                        className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg border bg-background"
                       >
-                        <span className="text-sm text-muted-foreground w-6">
-                          {index + 1}.
-                        </span>
-                        <div className="flex-1">
-                          <div className="font-medium">
-                            {puzzle?.title || `Задача #${sp.puzzleId}`}
-                          </div>
-                          {puzzle?.tags && puzzle.tags.length > 0 && (
-                            <div className="flex gap-1 mt-1">
-                              {puzzle.tags.slice(0, 2).map((tag) => (
-                                <Badge
-                                  key={tag}
-                                  variant="secondary"
-                                  className="text-xs"
-                                >
-                                  {tag}
-                                </Badge>
-                              ))}
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <span className="text-sm font-semibold text-muted-foreground w-5 shrink-0">
+                            {index + 1}.
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-sm flex items-center gap-2">
+                              <span className="truncate">
+                                {puzzle?.title || `Задача #${sp.puzzleId}`}
+                              </span>
+                              {puzzle?.rating && (
+                                <span className="text-[10px] font-mono font-medium text-amber-600 bg-amber-50 px-1.5 rounded shrink-0">
+                                  {puzzle.rating} ELO
+                                </span>
+                              )}
                             </div>
-                          )}
+
+                            {/* ✨ ОНОВЛЕНО: Відображення реляційних тегів (label) для вибраних задач */}
+                            {puzzle?.tags && puzzle.tags.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {puzzle.tags.slice(0, 3).map((tag: any) => (
+                                  <Badge
+                                    key={tag.id}
+                                    variant="secondary"
+                                    className="text-[10px] bg-blue-50 text-blue-700 hover:bg-blue-50 border border-blue-100 px-1.5 py-0"
+                                  >
+                                    {tag.label}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <Select
-                          value={sp.checkType}
-                          onValueChange={(value) =>
-                            handleChangeCheckType(sp.puzzleId, value!)
-                          }
-                        >
-                          <SelectTrigger className="w-40">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="AUTO">Автоматична</SelectItem>
-                            <SelectItem value="MANUAL">Ручна</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="text-destructive"
-                          onClick={() => handleRemovePuzzle(sp.puzzleId)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
+
+                        <div className="flex items-center gap-2 justify-end shrink-0">
+                          <Select
+                            value={sp.checkType}
+                            onValueChange={(value) =>
+                              handleChangeCheckType(sp.puzzleId, value!)
+                            }
+                          >
+                            <SelectTrigger className="w-36 h-8 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="AUTO">Автоматична</SelectItem>
+                              <SelectItem value="MANUAL">Ручна</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                            onClick={() => handleRemovePuzzle(sp.puzzleId)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     );
                   })}
@@ -414,12 +444,15 @@ export default function NewHomeworkPage() {
             ) : (
               <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
                 <PuzzleIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                <p>Почніть пошук, щоб додати задачі</p>
+                <p className="text-sm">
+                  Почніть пошук за назвою або тактикою, щоб додати задачі
+                </p>
               </div>
             )}
           </CardContent>
         </Card>
 
+        {/* Панель дій форми */}
         <div className="flex gap-3">
           <Link href="/coach/homework" className="flex-1">
             <Button type="button" variant="outline" className="w-full">
@@ -428,7 +461,7 @@ export default function NewHomeworkPage() {
           </Link>
           <Button
             type="submit"
-            className="flex-1"
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
             disabled={isSubmitting || isLoading}
           >
             {isSubmitting ? (

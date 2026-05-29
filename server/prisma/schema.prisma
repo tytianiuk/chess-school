@@ -25,6 +25,13 @@ enum ProgressStatus {
   FAILED
 }
 
+enum PuzzleStatus {
+  PENDING
+  REVIEW_PENDING
+  SOLVED 
+  FAILED
+}
+
 model User {
   id              Int      @id @default(autoincrement())
   email           String   @unique
@@ -77,10 +84,29 @@ model Puzzle {
   fen       String
   solution  String
   hint      String?
-  tags      String[]
-  createdAt DateTime @default(now())
+  rating    Int      @default(1500)
+  createdAt DateTime @default(now()) 
 
+  tags            PuzzleTagAssignment[]
   homeworkPuzzles HomeworkPuzzle[]
+}
+
+model PuzzleTag {
+  id    Int    @id @default(autoincrement())
+  name  String @unique 
+  label String 
+
+  puzzles PuzzleTagAssignment[]
+}
+
+model PuzzleTagAssignment {
+  puzzleId Int
+  tagId    Int
+
+  puzzle   Puzzle    @relation(fields: [puzzleId], references: [id], onDelete: Cascade)
+  tag      PuzzleTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([puzzleId, tagId])
 }
 
 model Homework {
@@ -140,11 +166,11 @@ model PuzzleAttempt {
   currentStep   Int     @default(0)
   attemptCount  Int     @default(0)
   solvedOnFirst Boolean @default(false)
-  isSolved      Boolean @default(false)
+  status        PuzzleStatus   @default(PENDING)
   studentAnswer String? @db.Text
 
   homeworkAnswer HomeworkAnswer @relation(fields: [homeworkAnswerId], references: [id], onDelete: Cascade)
-  homeworkPuzzle HomeworkPuzzle @relation(fields: [homeworkPuzzleId], references: [id])
+  homeworkPuzzle HomeworkPuzzle @relation(fields: [homeworkPuzzleId], references: [id], onDelete: Cascade)
 
   @@unique([homeworkAnswerId, homeworkPuzzleId])
 }

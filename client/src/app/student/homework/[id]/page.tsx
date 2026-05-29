@@ -29,6 +29,7 @@ import {
 } from './components/manual-variations-panel';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { ChessDiagram } from '@/components/chess-diagram';
+import { formatMovesToText } from '@/lib/format-moves-to-text';
 
 const statusConfig: Record<
   ProgressStatus,
@@ -85,6 +86,11 @@ export default function StudentHomeworkDetailPage({
   const currentAttempt = answer?.puzzleAttempts?.find(
     (a: PuzzleAttempt) => a.homeworkPuzzleId === currentHomeworkPuzzle?.id,
   );
+
+  // ✨ ОНОВЛЕНО: Визначаємо чи заблокована дошка для взаємодії (якщо вирішено або на перевірці)
+  const isLocked =
+    currentAttempt?.status === 'SOLVED' ||
+    currentAttempt?.status === 'REVIEW_PENDING';
 
   useEffect(() => {
     if (currentPuzzle?.fen) {
@@ -251,6 +257,13 @@ export default function StudentHomeworkDetailPage({
     toast.success('Варіант видалено');
   }, []);
 
+  const handleDeleteVariationClick = useCallback(
+    (variationId: string) => {
+      handleDeleteVariation(variationId);
+    },
+    [handleDeleteVariation],
+  );
+
   const handleLoadVariation = useCallback((variation: ManualVariation) => {
     if (!variation.startFen) return;
 
@@ -316,7 +329,7 @@ export default function StudentHomeworkDetailPage({
       sourceSquare: Square;
       targetSquare: Square;
     }): boolean => {
-      if (!game || !currentHomeworkPuzzle || currentAttempt?.isSolved) {
+      if (!game || !currentHomeworkPuzzle || isLocked) {
         return false;
       }
 
@@ -382,7 +395,7 @@ export default function StudentHomeworkDetailPage({
         return false;
       }
     },
-    [game, currentHomeworkPuzzle, currentAttempt, answer, submitAttempt],
+    [game, currentHomeworkPuzzle, isLocked, submitAttempt],
   );
 
   const handleSubmitForReview = async () => {
@@ -398,12 +411,7 @@ export default function StudentHomeworkDetailPage({
   const handleSubmitAllVariations = useCallback(() => {
     const allVariationsText = manualVariations.variations
       .map((v, idx) => {
-        const movesText = v.moves
-          .map(
-            (m, i) =>
-              `${Math.floor(i / 2) + 1}${i % 2 === 0 ? '.' : '...'}${m}`,
-          )
-          .join(' ');
+        const movesText = formatMovesToText(v.moves, currentPuzzle?.fen);
         return `Варіант ${idx + 1}: ${movesText}${v.comment ? ` (${v.comment})` : ''}`;
       })
       .join('\n');
@@ -411,7 +419,7 @@ export default function StudentHomeworkDetailPage({
     submitAttempt(allVariationsText).then(() => {
       toast.success('Всі варіанти збережено для перевірки!');
     });
-  }, [manualVariations.variations, submitAttempt]);
+  }, [manualVariations.variations, currentPuzzle?.fen, submitAttempt]);
 
   if (isLoading) {
     return (
@@ -437,7 +445,8 @@ export default function StudentHomeworkDetailPage({
   }
 
   const solvedCount =
-    answer.puzzleAttempts?.filter((a: PuzzleAttempt) => a.isSolved).length ?? 0;
+    answer.puzzleAttempts?.filter((a: any) => a.status === 'SOLVED').length ??
+    0;
   const totalPuzzles = homework.puzzles?.length ?? 0;
 
   const canSubmit =
@@ -445,7 +454,7 @@ export default function StudentHomeworkDetailPage({
     homework.puzzles?.some((p: HomeworkPuzzle) => p.checkType === 'MANUAL');
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6 px-4 py-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href="/student/homework">
@@ -457,19 +466,22 @@ export default function StudentHomeworkDetailPage({
             <h1 className="text-2xl font-bold tracking-tight">
               {homework.title}
             </h1>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
               <Badge variant={statusConfig[answer.status].variant}>
                 {statusConfig[answer.status].label}
               </Badge>
               <span>•</span>
-              <span>
+              <span className="font-medium">
                 Виконано {solvedCount} з {totalPuzzles}
               </span>
             </div>
           </div>
         </div>
         {canSubmit && (
-          <Button onClick={() => setShowSubmitDialog(true)}>
+          <Button
+            onClick={() => setShowSubmitDialog(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
             <Send className="h-4 w-4 mr-2" />
             Відправити на перевірку
           </Button>
@@ -479,7 +491,7 @@ export default function StudentHomeworkDetailPage({
       <div className="grid lg:grid-cols-2 gap-6">
         <Card>
           <CardContent className="p-4">
-            <div className="aspect-square">
+            <div className="aspect-square max-w-[500px] mx-auto">
               <ChessDiagram
                 fen={game?.fen() || currentPuzzle?.fen}
                 showNotation={true}
@@ -488,7 +500,7 @@ export default function StudentHomeworkDetailPage({
                 }
                 options={{
                   id: `homework-puzzle-${currentPuzzle?.id}`,
-                  allowDragging: !currentAttempt?.isSolved,
+                  allowDragging: !isLocked,
                   onPieceDrop: handleMove,
                 }}
               />
@@ -523,22 +535,22 @@ export default function StudentHomeworkDetailPage({
               onCommentChange={setNewVariationComment}
               onUndo={handleUndo}
               onSaveVariation={handleSaveVariation}
-              onDeleteVariation={handleDeleteVariation}
+              onDeleteVariation={handleDeleteVariationClick}
               onLoadVariation={handleLoadVariation}
               onStartNewVariation={handleStartNewVariation}
               onSubmitAllVariations={handleSubmitAllVariations}
-              isSolved={currentAttempt?.isSolved ?? false}
+              isSolved={isLocked}
             />
           )}
         </div>
       </div>
+
       <ConfirmDialog
         isOpen={!!showSubmitDialog}
         onClose={() => setShowSubmitDialog(false)}
         onConfirm={handleSubmitForReview}
         title="Відправити на перевірку?"
-        description="Після відправки ви не зможете змінювати відповіді. Тренер
-          перевірить ваше завдання та виставить оцінку."
+        description="Після відправки ви не зможете змінювати відповіді. Тренер перевірить ваше завдання та виставить оцінку."
         confirmLabel="Відправити"
         variant="destructive"
       />

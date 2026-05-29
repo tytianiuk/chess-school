@@ -67,6 +67,16 @@ export const HomeworkAnswerService = {
     const { data } = await api.delete(`/homework-answers/${id}/unassign`);
     return data;
   },
+
+  async updateAttemptStatus(attemptId: number, status: 'SOLVED' | 'FAILED') {
+    const { data } = await api.patch(
+      `/homework-answers/attempts/${attemptId}/status`,
+      {
+        status,
+      },
+    );
+    return data;
+  },
 };
 
 export default HomeworkAnswerService;

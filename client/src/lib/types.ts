@@ -18,8 +18,16 @@ export interface Puzzle {
   fen: string;
   solution: string;
   hint?: string;
-  tags: string[];
+  tags: PuzzleTag[];
+  rating: number;
   createdAt: string;
+  tagIds?: number[];
+}
+
+export interface PuzzleTag {
+  id: number;
+  name: string;
+  label: string;
 }
 
 export interface PaginatedMeta {
@@ -97,6 +105,7 @@ export interface HomeworkAnswer {
   puzzleAttempts?: PuzzleAttempt[];
 }
 
+export type PuzzleStatus = 'PENDING' | 'REVIEW_PENDING' | 'SOLVED' | 'FAILED';
 export interface PuzzleAttempt {
   id: number;
   homeworkAnswerId: number;
@@ -104,7 +113,7 @@ export interface PuzzleAttempt {
   currentStep: number;
   attemptCount: number;
   solvedOnFirst: boolean;
-  isSolved: boolean;
+  status: PuzzleStatus;
   studentAnswer?: string;
   homeworkPuzzle?: HomeworkPuzzle;
 }

@@ -2,33 +2,31 @@
 
 import { useCallback, useState } from 'react';
 import useSWR from 'swr';
-import type { PaginatedResponse, Puzzle as PuzzleType } from '@/lib/types';
+import type {
+  PaginatedResponse,
+  PuzzleTag,
+  Puzzle as PuzzleType,
+} from '@/lib/types';
 import Link from 'next/link';
 import { PuzzleService } from '@/services/puzzle.service';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Plus, Search, Pencil, Trash2, Puzzle, Loader2 } from 'lucide-react';
+  Plus,
+  Search,
+  Pencil,
+  Trash2,
+  Puzzle,
+  Loader2,
+  Award,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { ChessDiagram } from '@/components/chess-diagram';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 
 const ITEMS_PER_PAGE = 8;
 
@@ -76,8 +74,11 @@ export default function PuzzlesPage() {
     (puzzle) =>
       puzzle.title?.toLowerCase().includes(search.toLowerCase()) ||
       puzzle.fen.toLowerCase().includes(search.toLowerCase()) ||
-      puzzle.tags.some((tag: string) =>
-        tag.toLowerCase().includes(search.toLowerCase()),
+      puzzle.rating?.toString().includes(search) ||
+      puzzle.tags?.some(
+        (tag: PuzzleTag) =>
+          tag.label.toLowerCase().includes(search.toLowerCase()) ||
+          tag.name.toLowerCase().includes(search.toLowerCase()),
       ),
   );
 
@@ -90,7 +91,9 @@ export default function PuzzlesPage() {
       setAllPuzzles((prev) => prev.filter((p) => p.id !== deleteId));
       mutate();
     } catch {
-      toast.error('Помилка при видаленні задачі');
+      toast.error(
+        'Помилка при видаленні задачі. Можливо, вона використовується в домашніх завданнях.',
+      );
     } finally {
       setDeleteId(null);
     }
@@ -113,7 +116,7 @@ export default function PuzzlesPage() {
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Пошук за назвою, FEN або тегами..."
+          placeholder="Пошук за назвою, FEN, рейтингом чи темами..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-10"
@@ -138,23 +141,30 @@ export default function PuzzlesPage() {
         <>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredPuzzles.map((puzzle: PuzzleType) => (
-              <Card key={puzzle.id} className="group gap-2">
-                <CardHeader>
-                  <div className="flex items-start justify-around w-full">
-                    <div className="space-y-1 pl-8">
-                      <CardTitle className="w-full text-lg">
+              <Card
+                key={puzzle.id}
+                className="group gap-2 flex flex-col justify-between"
+              >
+                <CardHeader className="pb-2">
+                  <div className="flex items-start justify-between w-full gap-2">
+                    <div className="space-y-1 flex-1">
+                      <CardTitle className="text-base line-clamp-1 font-bold">
                         {puzzle.title || `Задача #${puzzle.id}`}
                       </CardTitle>
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground font-mono">
+                        <Award className="h-3.5 w-3.5 text-amber-500" />
+                        <span>Рейтинг: {puzzle.rating || 1500}</span>
+                      </div>
                     </div>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                       <Link href={`/coach/puzzles/${puzzle.id}/edit`}>
-                        <Button variant="ghost" className="h-8 w-8">
+                        <Button variant="ghost" className="h-8 w-8 p-0">
                           <Pencil className="h-4 w-4" />
                         </Button>
                       </Link>
                       <Button
                         variant="ghost"
-                        className="h-8 w-8 text-destructive"
+                        className="h-8 w-8 text-destructive p-0"
                         onClick={() => setDeleteId(puzzle.id)}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -162,20 +172,39 @@ export default function PuzzlesPage() {
                     </div>
                   </div>
                 </CardHeader>
-                <ChessDiagram fen={puzzle.fen} size={240} className="mx-auto" />
-                <CardContent>
-                  {puzzle.tags.length > 0 && (
+
+                <div className="pr-4">
+                  <ChessDiagram
+                    fen={puzzle.fen}
+                    showNotation={true}
+                    className="mx-auto"
+                  />
+                </div>
+
+                <CardContent className="pt-2 pb-4 mt-auto">
+                  {puzzle.tags && puzzle.tags.length > 0 ? (
                     <div className="flex flex-wrap gap-1 w-full justify-center">
-                      {puzzle.tags.slice(0, 3).map((tag: string) => (
-                        <Badge key={tag} className="bg-blue-50 text-blue-700">
-                          {tag}
+                      {puzzle.tags.slice(0, 2).map((tag: PuzzleTag) => (
+                        <Badge
+                          key={tag.id}
+                          variant="secondary"
+                          className="bg-blue-50 text-blue-700 hover:bg-blue-50 border border-blue-200 text-[11px] px-2 py-0"
+                        >
+                          {tag.label}
                         </Badge>
                       ))}
-                      {puzzle.tags.length > 3 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{puzzle.tags.length - 3}
+                      {puzzle.tags.length > 2 && (
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] px-1.5 py-0 text-muted-foreground"
+                        >
+                          +{puzzle.tags.length - 2}
                         </Badge>
                       )}
+                    </div>
+                  ) : (
+                    <div className="text-center text-xs text-muted-foreground italic">
+                      Без тем
                     </div>
                   )}
                 </CardContent>
@@ -184,7 +213,7 @@ export default function PuzzlesPage() {
           </div>
 
           {hasMore && !search && (
-            <div className="flex justify-center pt-4">
+            <div className="flex justify-center pt-6">
               <Button
                 onClick={loadMore}
                 disabled={isLoadingMore}
@@ -226,25 +255,14 @@ export default function PuzzlesPage() {
         </Card>
       )}
 
-      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Видалити задачу?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Цю дію неможливо скасувати. Задача буде видалена назавжди.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Скасувати</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive hover:bg-destructive/70"
-            >
-              Видалити
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        isOpen={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        onConfirm={handleDelete}
+        title="Видалити задачу?"
+        description="Цю дію неможливо скасувати. Задача буде видалена назавжди з банку даних."
+        variant="destructive"
+      />
     </div>
   );
 }

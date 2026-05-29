@@ -5,8 +5,9 @@ import {
 } from '@nestjs/common';
 import { CreateHomeworkAnswerDto } from './dto/create-homework-answer.dto';
 import { PrismaService } from '../prisma/prisma.service';
-import { CheckType, ProgressStatus } from '@prisma/client';
+import { CheckType, ProgressStatus, PuzzleStatus } from '@prisma/client';
 import { Chess } from 'chess.js';
+import { UpdateAttemptStatusDto } from './dto/update-attempt-status.dtp';
 
 @Injectable()
 export class HomeworkAnswersService {
@@ -229,7 +230,7 @@ export class HomeworkAnswersService {
 
       return {
         currentStep: 0,
-        isSolved: false,
+        status: PuzzleStatus.PENDING,
         attemptCount: 0,
         fen: homeworkPuzzle.puzzle.fen,
         checkType: homeworkPuzzle.checkType,
@@ -245,11 +246,37 @@ export class HomeworkAnswersService {
 
     return {
       currentStep: attempt.currentStep,
-      isSolved: attempt.isSolved,
+      status: attempt.status,
       attemptCount: attempt.attemptCount,
       fen: currentFen,
       checkType: attempt.homeworkPuzzle.checkType,
     };
+  }
+
+  async updateAttemptStatus(attemptId: number, dto: UpdateAttemptStatusDto) {
+    const attempt = await this.prisma.puzzleAttempt.findUnique({
+      where: { id: attemptId },
+      include: {
+        homeworkAnswer: {
+          include: {
+            homework: {
+              include: { puzzles: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!attempt) {
+      throw new NotFoundException(`Attempt with ID ${attemptId} not found`);
+    }
+
+    const updatedAttempt = await this.prisma.puzzleAttempt.update({
+      where: { id: attemptId },
+      data: { status: dto.status },
+    });
+
+    return updatedAttempt;
   }
 
   private async getOrCreatePuzzleAttempt(
@@ -275,7 +302,10 @@ export class HomeworkAnswersService {
   ) {
     await this.prisma.puzzleAttempt.update({
       where: { id: attemptId },
-      data: { studentAnswer: answer, isSolved: true },
+      data: {
+        studentAnswer: answer,
+        status: PuzzleStatus.REVIEW_PENDING,
+      },
     });
 
     await this.prisma.homeworkAnswer.update({
@@ -338,7 +368,7 @@ export class HomeworkAnswersService {
       where: { id: attemptId },
       data: {
         currentStep: stepAfterServer,
-        isSolved: isFinished,
+        status: isFinished ? PuzzleStatus.SOLVED : PuzzleStatus.PENDING,
         solvedOnFirst: attemptCount === 0 && isFinished,
       },
     });
@@ -372,7 +402,7 @@ export class HomeworkAnswersService {
 
   private async checkAndFinishHomework(answerId: number, totalPuzzles: number) {
     const solvedCount = await this.prisma.puzzleAttempt.count({
-      where: { homeworkAnswerId: answerId, isSolved: true },
+      where: { homeworkAnswerId: answerId, status: PuzzleStatus.SOLVED },
     });
 
     if (solvedCount === totalPuzzles) {

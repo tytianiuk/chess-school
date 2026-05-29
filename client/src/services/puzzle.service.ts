@@ -1,5 +1,5 @@
 import api from '@/lib/api';
-import { PaginatedResponse, Puzzle } from '@/lib/types';
+import { CheckType, PaginatedResponse, Puzzle } from '@/lib/types';
 
 export const PuzzleService = {
   async getAll() {
@@ -27,7 +27,9 @@ export const PuzzleService = {
     title?: string;
     hint?: string;
     tags?: string[];
-    type?: 'AUTO' | 'MANUAL';
+    rating?: number;
+    type?: CheckType;
+    tagIds?: number[];
   }) {
     const { data } = await api.post('/puzzles', payload);
     return data;
@@ -40,8 +42,10 @@ export const PuzzleService = {
       solution: string;
       title: string;
       hint: string;
+      rating?: number;
       tags: string[];
-      type: 'AUTO' | 'MANUAL';
+      type: CheckType;
+      tagIds?: number[];
     }>,
   ) {
     const { data } = await api.patch(`/puzzles/${id}`, payload);
