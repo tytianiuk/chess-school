@@ -54,6 +54,9 @@ model User {
   students User[]  @relation("CoachToStudent")
   coachId  Int?
   coach    User?   @relation("CoachToStudent", fields: [coachId], references: [id])
+
+  submittedReviews CoachReview[] @relation("StudentReviews")
+  receivedReviews  CoachReview[] @relation("CoachReviews")
 }
 
 model Group {
@@ -173,4 +176,18 @@ model PuzzleAttempt {
   homeworkPuzzle HomeworkPuzzle @relation(fields: [homeworkPuzzleId], references: [id], onDelete: Cascade)
 
   @@unique([homeworkAnswerId, homeworkPuzzleId])
+}
+
+model CoachReview {
+  id        Int      @id @default(autoincrement())
+  studentId Int
+  coachId   Int
+  rating    Int      
+  comment   String   @db.Text
+  createdAt DateTime @default(now())
+
+  student   User     @relation("StudentReviews", fields: [studentId], references: [id], onDelete: Cascade)
+  coach     User     @relation("CoachReviews", fields: [coachId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, coachId])
 }

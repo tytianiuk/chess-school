@@ -9,6 +9,7 @@ import { StudentsModule } from './students/students.module';
 import { HomeworkAnswersModule } from './homework-answers/homework-answers.module';
 import { GroupsModule } from './groups/groups.module';
 import { TagsModule } from './tags/tags.module';
+import { CoachReviewsModule } from './coach-reviews/coach-reviews.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { TagsModule } from './tags/tags.module';
     StudentsModule,
     GroupsModule,
     TagsModule,
+    CoachReviewsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

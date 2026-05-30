@@ -136,3 +136,30 @@ export interface AuthResponse {
   accessToken: string;
   user: User;
 }
+
+export interface CreateCoachReviewInput {
+  coachId: number;
+  rating: number;
+  comment: string;
+}
+
+export interface CoachReview {
+  id: number;
+  studentId: number;
+  studentName?: string;
+  coachId: number;
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
+
+export interface TrainingCoach {
+  id: number;
+  name: string;
+  email: string;
+  avatarUrl?: string;
+  specialization?: string;
+  hasReviewed: boolean;
+  avgRating?: number;
+  reviewsCount?: number;
+}
