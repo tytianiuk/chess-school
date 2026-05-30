@@ -42,25 +42,21 @@ export class PuzzlesController {
     return this.puzzlesService.create(dto);
   }
 
-  @Get('self-study')
-  @Roles(Role.COACH, Role.STUDENT)
+  @Post('training/random')
+  @Roles(Role.STUDENT, Role.COACH)
   @ApiOperation({
-    summary: 'Get filtered puzzles for self-study mode (coach & student)',
+    summary: 'Get a random puzzle based on tags and rating range',
   })
-  @ApiResponse({
-    status: 200,
-    description: 'Filtered puzzles retrieved successfully',
-  })
-  findForSelfStudy(
-    @Query('tagIds') tagIds?: string,
-    @Query('minRating') minRating?: string,
-    @Query('maxRating') maxRating?: string,
+  getRandomPuzzle(
+    @Body('tagIds') tagIds?: number[],
+    @Body('minRating') minRating?: number,
+    @Body('maxRating') maxRating?: number,
   ) {
-    return this.puzzlesService.findForSelfStudy({
+    return this.puzzlesService.findRandomPuzzleForTraining(
       tagIds,
       minRating,
       maxRating,
-    });
+    );
   }
 
   @Get()

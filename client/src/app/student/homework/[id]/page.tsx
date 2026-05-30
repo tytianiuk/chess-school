@@ -3,7 +3,6 @@
 import { useState, useCallback, useEffect, use } from 'react';
 
 import useSWR from 'swr';
-import dynamic from 'next/dynamic';
 import { HomeworkService } from '@/services/homework.service';
 import { HomeworkAnswerService } from '@/services/homework-answer.service';
 import type {
@@ -87,7 +86,6 @@ export default function StudentHomeworkDetailPage({
     (a: PuzzleAttempt) => a.homeworkPuzzleId === currentHomeworkPuzzle?.id,
   );
 
-  // ✨ ОНОВЛЕНО: Визначаємо чи заблокована дошка для взаємодії (якщо вирішено або на перевірці)
   const isLocked =
     currentAttempt?.status === 'SOLVED' ||
     currentAttempt?.status === 'REVIEW_PENDING';

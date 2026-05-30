@@ -55,4 +55,13 @@ export const PuzzleService = {
   async remove(id: number) {
     await api.delete(`/puzzles/${id}`);
   },
+
+  async getRandomTrainingPuzzle(payload: {
+    tagIds: number[];
+    minRating: number;
+    maxRating: number;
+  }) {
+    const { data } = await api.post('/puzzles/training/random', payload);
+    return data;
+  },
 };

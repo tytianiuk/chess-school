@@ -119,43 +119,45 @@ export class PuzzlesService {
     });
   }
 
-  async findForSelfStudy(query: {
-    tagIds?: string;
-    minRating?: string;
-    maxRating?: string;
-  }) {
-    const { tagIds, minRating, maxRating } = query;
-    const where: any = {};
+  async findRandomPuzzleForTraining(
+    tagIds?: number[],
+    minRating?: number,
+    maxRating?: number,
+  ) {
+    const whereClause: any = {};
 
     if (minRating || maxRating) {
-      where.rating = {
-        gte: minRating ? parseInt(minRating, 10) : 0,
-        lte: maxRating ? parseInt(maxRating, 10) : 3000,
+      whereClause.rating = {
+        ...(minRating ? { gte: minRating } : {}),
+        ...(maxRating ? { lte: maxRating } : {}),
       };
     }
 
-    if (tagIds) {
-      const ids = tagIds.split(',').map((id) => parseInt(id, 10));
-      where.tags = {
+    if (tagIds && tagIds.length > 0) {
+      whereClause.tags = {
         some: {
-          tagId: { in: ids },
+          tagId: { in: tagIds },
         },
       };
     }
+    const count = await this.prisma.puzzle.count({ where: whereClause });
 
-    const puzzles = await this.prisma.puzzle.findMany({
-      where,
+    if (count === 0) {
+      throw new NotFoundException('Задач із такими параметрами не знайдено');
+    }
+    const randomIndex = Math.floor(Math.random() * count);
+
+    const randomPuzzles = await this.prisma.puzzle.findMany({
+      where: whereClause,
+      skip: randomIndex,
+      take: 1,
       include: {
         tags: {
           include: { tag: true },
         },
       },
-      orderBy: { createdAt: 'desc' },
     });
 
-    return puzzles.map((puzzle) => ({
-      ...puzzle,
-      tags: puzzle.tags.map((t) => t.tag),
-    }));
+    return randomPuzzles[0];
   }
 }
