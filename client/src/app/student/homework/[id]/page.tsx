@@ -360,25 +360,28 @@ export default function StudentHomeworkDetailPage({
           }
 
           if (result.correct) {
-            setAttemptHistory((prev) => [...prev, moveNotation]);
+            const updatedHistory = [...attemptHistory, moveNotation];
+            setAttemptHistory(updatedHistory);
 
             if (result.isFinished) {
-              toast.success('Задачу повністю вирішено!');
+              setGame(new Chess(game.fen()));
             } else if (result.serverMove) {
               setTimeout(() => {
                 try {
-                  const opponentMove = game.move(result.serverMove!);
+                  const nextGame = new Chess(game.fen());
+                  const opponentMove = nextGame.move(result.serverMove!);
+
                   if (opponentMove) {
-                    setAttemptHistory((prev) => [...prev, opponentMove.san]);
-                    setGame(new Chess(game.fen()));
+                    setAttemptHistory([...updatedHistory, opponentMove.san]);
+                    setGame(nextGame);
                   }
                 } catch (e) {
                   console.error('Помилка рендеру ходу сервера:', e);
                 }
               }, 600);
+            } else {
+              setGame(new Chess(game.fen()));
             }
-
-            setGame(new Chess(game.fen()));
           } else {
             toast.error(result.message || 'Неправильний хід.');
             game.undo();
@@ -388,12 +391,13 @@ export default function StudentHomeworkDetailPage({
           }
         });
 
+        setGame(new Chess(game.fen()));
         return true;
       } catch {
         return false;
       }
     },
-    [game, currentHomeworkPuzzle, isLocked, submitAttempt],
+    [game, currentHomeworkPuzzle, isLocked, submitAttempt, attemptHistory],
   );
 
   const handleSubmitForReview = async () => {

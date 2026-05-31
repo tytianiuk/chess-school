@@ -1,14 +1,10 @@
 import { Badge } from '@/components/ui/badge';
 import { STATUS_CONFIG } from '@/lib/constants';
-import { ProgressStatus, PuzzleStatus } from '@/lib/types';
+import { ProgressStatus } from '@/lib/types';
 
 import { HelpCircle } from 'lucide-react';
 
-export function StatusBadge({
-  status,
-}: {
-  status: ProgressStatus | PuzzleStatus;
-}) {
+export function StatusBadge({ status }: { status: ProgressStatus }) {
   const current = STATUS_CONFIG[status] || {
     label: status,
     color: 'bg-gray-500 text-white',

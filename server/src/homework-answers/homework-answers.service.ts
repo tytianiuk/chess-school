@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { CreateHomeworkAnswerDto } from './dto/create-homework-answer.dto';
 import { PrismaService } from '../prisma/prisma.service';
-import { CheckType, ProgressStatus, PuzzleStatus } from '@prisma/client';
+import { CheckType, ProgressStatus } from '@prisma/client';
 import { Chess } from 'chess.js';
 import { UpdateAttemptStatusDto } from './dto/update-attempt-status.dtp';
 
@@ -230,7 +230,7 @@ export class HomeworkAnswersService {
 
       return {
         currentStep: 0,
-        status: PuzzleStatus.PENDING,
+        status: ProgressStatus.PENDING,
         attemptCount: 0,
         fen: homeworkPuzzle.puzzle.fen,
         checkType: homeworkPuzzle.checkType,
@@ -304,7 +304,7 @@ export class HomeworkAnswersService {
       where: { id: attemptId },
       data: {
         studentAnswer: answer,
-        status: PuzzleStatus.REVIEW_PENDING,
+        status: ProgressStatus.REVIEW_PENDING,
       },
     });
 
@@ -368,7 +368,7 @@ export class HomeworkAnswersService {
       where: { id: attemptId },
       data: {
         currentStep: stepAfterServer,
-        status: isFinished ? PuzzleStatus.SOLVED : PuzzleStatus.PENDING,
+        status: isFinished ? ProgressStatus.SOLVED : ProgressStatus.PENDING,
         solvedOnFirst: attemptCount === 0 && isFinished,
       },
     });
@@ -402,7 +402,7 @@ export class HomeworkAnswersService {
 
   private async checkAndFinishHomework(answerId: number, totalPuzzles: number) {
     const solvedCount = await this.prisma.puzzleAttempt.count({
-      where: { homeworkAnswerId: answerId, status: PuzzleStatus.SOLVED },
+      where: { homeworkAnswerId: answerId, status: ProgressStatus.SOLVED },
     });
 
     if (solvedCount === totalPuzzles) {

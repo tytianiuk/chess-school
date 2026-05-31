@@ -56,7 +56,7 @@ export class StudentsController {
     description: 'Search by student name or email',
   })
   getMyStudents(@Request() req: any, @Query('search') search?: string) {
-    const coachId = req.user.userId ? +req.user.userId : +req.user.id;
+    const coachId = req.user.userId;
     return this.studentsService.getMyStudents(coachId, search);
   }
 
@@ -68,7 +68,7 @@ export class StudentsController {
     description: 'Student successfully added to your group',
   })
   assignStudent(@Param('studentId') studentId: string, @Request() req: any) {
-    const coachId = req.user.userId ? +req.user.userId : +req.user.id;
+    const coachId = req.user.userId;
 
     return this.studentsService.assignStudentToCoach(coachId, +studentId);
   }

@@ -40,7 +40,7 @@ export class CoachReviewsController {
   })
   @ApiResponse({ status: 403, description: 'Access allowed only for students' })
   getMyCoaches(@Request() req: any) {
-    const studentId = req.user.userId ? +req.user.userId : +req.user.id;
+    const studentId = req.user.userId;
     return this.coachReviewService.getStudentCoaches(studentId);
   }
 
@@ -59,7 +59,7 @@ export class CoachReviewsController {
     description: 'Review for this coach already exists',
   })
   createReview(@Request() req: any, @Body() dto: CreateReviewDto) {
-    const studentId = req.user.userId ? +req.user.userId : +req.user.id;
+    const studentId = req.user.userId;
 
     return this.coachReviewService.createReview(
       studentId,
@@ -90,7 +90,7 @@ export class CoachReviewsController {
     description: 'Coach reviews and stats retrieved successfully',
   })
   getMyReviews(@Request() req: any) {
-    const coachId = req.user.userId ? +req.user.userId : +req.user.id;
+    const coachId = req.user.userId;
     return this.coachReviewService.getCoachOwnProfileAndReviews(coachId);
   }
 
@@ -104,7 +104,7 @@ export class CoachReviewsController {
     @Request() req: any,
     @Param('coachId', ParseIntPipe) coachId: number,
   ) {
-    const studentId = req.user.userId ? +req.user.userId : +req.user.id;
+    const studentId = req.user.userId;
     return this.coachReviewService.deleteReview(studentId, coachId);
   }
 }

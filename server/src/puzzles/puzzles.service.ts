@@ -143,7 +143,7 @@ export class PuzzlesService {
     const count = await this.prisma.puzzle.count({ where: whereClause });
 
     if (count === 0) {
-      throw new NotFoundException('Задач із такими параметрами не знайдено');
+      throw new NotFoundException('Puzzles with these parameters not found');
     }
     const randomIndex = Math.floor(Math.random() * count);
 

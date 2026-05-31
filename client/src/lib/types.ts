@@ -105,7 +105,6 @@ export interface HomeworkAnswer {
   puzzleAttempts?: PuzzleAttempt[];
 }
 
-export type PuzzleStatus = 'PENDING' | 'REVIEW_PENDING' | 'SOLVED' | 'FAILED';
 export interface PuzzleAttempt {
   id: number;
   homeworkAnswerId: number;
@@ -113,7 +112,7 @@ export interface PuzzleAttempt {
   currentStep: number;
   attemptCount: number;
   solvedOnFirst: boolean;
-  status: PuzzleStatus;
+  status: ProgressStatus;
   studentAnswer?: string;
   homeworkPuzzle?: HomeworkPuzzle;
 }

@@ -11,6 +11,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import type { CheckType, PuzzleAttempt } from '@/lib/types';
+import { ChessNotation } from '@/components/chess-notation';
 
 interface PuzzleInfoCardProps {
   puzzleTitle: string | undefined;
@@ -134,15 +135,7 @@ export function PuzzleInfoCard({
                 Введені ходи:
               </div>
               <div className="flex flex-wrap gap-1 font-mono">
-                {attemptHistory.map((move, index) => (
-                  <Badge
-                    key={index}
-                    variant="secondary"
-                    className="text-xs px-2 py-0"
-                  >
-                    {move}
-                  </Badge>
-                ))}
+                <ChessNotation moves={attemptHistory} />
               </div>
             </div>
           )}

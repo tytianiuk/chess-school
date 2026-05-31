@@ -18,7 +18,7 @@ export class TagsService {
 
     if (existing) {
       throw new ConflictException(
-        `Тег з іменем "${dto.name}" вже існує у базі`,
+        `A tag named "${dto.name}" already exists in the database`,
       );
     }
 
@@ -34,7 +34,7 @@ export class TagsService {
   async findOne(id: number) {
     const tag = await this.prisma.puzzleTag.findUnique({ where: { id } });
     if (!tag) {
-      throw new NotFoundException(`Тег з ID ${id} не знайдено`);
+      throw new NotFoundException(`The tag with ID: ${id} not found`);
     }
     return tag;
   }
@@ -48,7 +48,7 @@ export class TagsService {
       });
       if (existing) {
         throw new ConflictException(
-          `Системне ім’я "${dto.name}" вже зайняте іншим тегом`,
+          `The system name "${dto.name}" is already taken by another tag`,
         );
       }
     }

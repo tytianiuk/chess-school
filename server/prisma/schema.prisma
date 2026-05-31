@@ -25,13 +25,6 @@ enum ProgressStatus {
   FAILED
 }
 
-enum PuzzleStatus {
-  PENDING
-  REVIEW_PENDING
-  SOLVED 
-  FAILED
-}
-
 model User {
   id              Int      @id @default(autoincrement())
   email           String   @unique
@@ -169,7 +162,7 @@ model PuzzleAttempt {
   currentStep   Int     @default(0)
   attemptCount  Int     @default(0)
   solvedOnFirst Boolean @default(false)
-  status        PuzzleStatus   @default(PENDING)
+  status        ProgressStatus   @default(PENDING)
   studentAnswer String? @db.Text
 
   homeworkAnswer HomeworkAnswer @relation(fields: [homeworkAnswerId], references: [id], onDelete: Cascade)

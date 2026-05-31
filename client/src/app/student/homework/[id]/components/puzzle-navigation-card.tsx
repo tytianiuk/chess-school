@@ -10,7 +10,11 @@ import {
   XCircle,
   Clock,
 } from 'lucide-react';
-import type { HomeworkPuzzle, PuzzleAttempt, PuzzleStatus } from '@/lib/types';
+import type {
+  HomeworkPuzzle,
+  PuzzleAttempt,
+  ProgressStatus,
+} from '@/lib/types';
 
 interface PuzzleNavigationCardProps {
   currentIndex: number;
@@ -21,7 +25,7 @@ interface PuzzleNavigationCardProps {
 }
 
 const puzzleNavConfig: Record<
-  PuzzleStatus,
+  ProgressStatus,
   {
     icon: React.ElementType;
     activeClass: string;
@@ -48,6 +52,11 @@ const puzzleNavConfig: Record<
     inactiveClass: 'text-red-600 border-red-200 bg-red-50/50 hover:bg-red-50',
   },
   PENDING: {
+    icon: Clock,
+    activeClass: 'bg-blue-600 text-white hover:bg-blue-700 border-transparent',
+    inactiveClass: 'bg-background hover:bg-muted border-border text-foreground',
+  },
+  IN_PROGRESS: {
     icon: Clock,
     activeClass: 'bg-blue-600 text-white hover:bg-blue-700 border-transparent',
     inactiveClass: 'bg-background hover:bg-muted border-border text-foreground',
@@ -97,7 +106,7 @@ export function PuzzleNavigationCard({
               (a: PuzzleAttempt) => a.homeworkPuzzleId === p.id,
             );
             const isCurrent = index === currentIndex;
-            const status = (attempt?.status || 'PENDING') as PuzzleStatus;
+            const status = (attempt?.status || 'PENDING') as ProgressStatus;
             const config = puzzleNavConfig[status];
             const Icon = config.icon;
             const statusColorClass = isCurrent
