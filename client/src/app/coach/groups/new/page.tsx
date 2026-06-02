@@ -26,7 +26,7 @@ export default function NewGroupPage() {
   const router = useRouter();
   const { data: students, isLoading: studentsLoading } = useSWR(
     'students',
-    StudentService.getMyStudents,
+    () => StudentService.getMyStudents(''),
   );
 
   const [isSubmitting, setIsSubmitting] = useState(false);

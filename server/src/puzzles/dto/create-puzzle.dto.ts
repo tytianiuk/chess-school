@@ -39,22 +39,22 @@ export class CreatePuzzleDto {
 
   @IsNumber()
   @IsOptional()
-  @Min(300, { message: 'Рейтинг не може бути меншим за 300' })
-  @Max(3000, { message: 'Рейтинг не може бути більшим за 3000' })
+  @Min(300, { message: 'The rating cannot be lower than 300' })
+  @Max(3000, { message: 'The rating cannot exceed 3,000' })
   @ApiProperty({
     example: 1500,
-    description: 'Шаховий рейтинг складності задачі (ELO)',
+    description: 'Chess rating of problem difficulty (ELO)',
     required: false,
     default: 1500,
   })
   rating?: number;
 
   @IsArray()
-  @IsNumber({}, { each: true, message: 'Кожен тег має бути числовим ID' })
+  @IsNumber({}, { each: true, message: 'Each tag must have a numeric ID' })
   @IsOptional()
   @ApiProperty({
     example: [1, 3],
-    description: 'Масив ідентифікаторів (ID) тегів тактики з бази даних',
+    description: 'An array of tactic tag IDs from the database',
     required: false,
     type: [Number],
   })

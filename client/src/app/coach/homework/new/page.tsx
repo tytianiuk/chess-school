@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import { HomeworkService } from '@/services/homework.service';
@@ -41,6 +41,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { StudentService } from '@/services/student.service';
 
 interface SelectedPuzzle {
   puzzleId: number;
@@ -60,7 +61,7 @@ export default function NewHomeworkPage() {
   );
   const { data: students, isLoading: studentsLoading } = useSWR(
     'students',
-    GroupService.getStudents,
+    () => StudentService.getMyStudents(''),
   );
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -74,7 +75,6 @@ export default function NewHomeworkPage() {
   const [selectedPuzzles, setSelectedPuzzles] = useState<SelectedPuzzle[]>([]);
   const [puzzleSearch, setPuzzleSearch] = useState('');
 
-  // ✨ ОНОВЛЕНО: Безпечний пошук за новими об'єктами тегів (за label та name) + за рейтингом складності
   const filteredPuzzles = puzzles?.data?.filter(
     (puzzle: any) =>
       !selectedPuzzles.some((sp) => sp.puzzleId === puzzle.id) &&
@@ -323,7 +323,6 @@ export default function NewHomeworkPage() {
               />
             </div>
 
-            {/* Випадаючий список пошуку задач */}
             {puzzleSearch && (
               <div className="border rounded-lg max-h-56 overflow-y-auto bg-background shadow-md">
                 {puzzlesLoading ? (
@@ -362,7 +361,6 @@ export default function NewHomeworkPage() {
               </div>
             )}
 
-            {/* Список уже вибраних задач */}
             {selectedPuzzles.length > 0 ? (
               <div className="space-y-2 pt-2">
                 <Label className="text-sm font-semibold">
@@ -393,8 +391,6 @@ export default function NewHomeworkPage() {
                                 </span>
                               )}
                             </div>
-
-                            {/* ✨ ОНОВЛЕНО: Відображення реляційних тегів (label) для вибраних задач */}
                             {puzzle?.tags && puzzle.tags.length > 0 && (
                               <div className="flex flex-wrap gap-1 mt-1">
                                 {puzzle.tags.slice(0, 3).map((tag: any) => (
@@ -452,7 +448,6 @@ export default function NewHomeworkPage() {
           </CardContent>
         </Card>
 
-        {/* Панель дій форми */}
         <div className="flex gap-3">
           <Link href="/coach/homework" className="flex-1">
             <Button type="button" variant="outline" className="w-full">

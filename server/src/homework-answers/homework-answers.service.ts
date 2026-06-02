@@ -327,19 +327,7 @@ export class HomeworkAnswersService {
   ) {
     const { puzzle } = homeworkPuzzle;
     const { id: attemptId, attemptCount, currentStep } = puzzleAttempt;
-
     const moves = puzzle.solution.split(' ');
-
-    const validation = this.validateChessMove(
-      puzzle.fen,
-      puzzle.solution,
-      currentStep,
-      playerMove,
-    );
-
-    if (!validation.isValid) {
-      return { correct: false, message: validation.error };
-    }
 
     const expectedMove = moves[currentStep];
 
@@ -350,16 +338,13 @@ export class HomeworkAnswersService {
           attemptCount: { increment: 1 },
         },
       });
-
       return { correct: false, message: 'Incorrect move.' };
     }
 
     const nextStep = currentStep + 1;
     let serverMove = null;
 
-    if (nextStep < moves.length) {
-      serverMove = moves[nextStep];
-    }
+    if (nextStep < moves.length) serverMove = moves[nextStep];
 
     const stepAfterServer = serverMove ? nextStep + 1 : nextStep;
     const isFinished = stepAfterServer >= moves.length;
@@ -423,43 +408,6 @@ export class HomeworkAnswersService {
         data: { status: ProgressStatus.IN_PROGRESS },
       });
       homeworkAnswer.status = ProgressStatus.IN_PROGRESS;
-    }
-  }
-
-  private validateChessMove(
-    fen: string,
-    solution: string,
-    currentStep: number,
-    playerMove: string,
-  ) {
-    try {
-      const game = new Chess(fen);
-      const moves = solution.split(' ');
-
-      for (let i = 0; i < currentStep; i++) {
-        const moveResult = game.move(moves[i]);
-        if (!moveResult) {
-          throw new Error(
-            `Internal error: incorrect move in solution (${moves[i]})`,
-          );
-        }
-      }
-
-      const moveAttempt = game.move(playerMove);
-
-      if (!moveAttempt) {
-        return {
-          isValid: false,
-          error: 'This move is not allowed by chess rules.',
-        };
-      }
-
-      return { isValid: true, moveDetails: moveAttempt };
-    } catch (e) {
-      return {
-        isValid: false,
-        error: 'Internal error: incorrect move format or validation error.',
-      };
     }
   }
 }

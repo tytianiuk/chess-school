@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Mail, Star } from 'lucide-react';
 import type { TrainingCoach } from '@/lib/types';
+import Link from 'next/link';
 
 interface CoachSearchGridProps {
   coachesList: TrainingCoach[];
@@ -28,6 +29,13 @@ export function CoachSearchGrid({
           Оберіть наставника для індивідуальної роботи та перегляньте його
           рейтинг і відгуки.
         </p>
+        <div>
+          <Link href="/student/become-coach">
+            <span className="text-xs text-blue-600 hover:text-blue-700 font-semibold underline cursor-pointer">
+              Ви тренер і хочете активувати кабінет викладача?
+            </span>
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

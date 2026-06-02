@@ -27,7 +27,6 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -76,7 +75,6 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Features */}
         <div className="mt-24 grid md:grid-cols-3 gap-8">
           <div className="text-center p-6 rounded-lg border bg-card">
             <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
